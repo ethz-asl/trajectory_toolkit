@@ -9,7 +9,7 @@
 # import matplotlib.animation as animation
 
 # Set execution bools
-hasRosSubscriber = True;
+hasRosSubscriber = False;
 isLivePlotting = False;
 
 # Imports (Execution specific)
@@ -18,9 +18,9 @@ import matplotlib.pyplot as plt
 from TimedData import TimedData
 if hasRosSubscriber:
 	import rospy
-	from Listeners import TransformStampedListener
+	from RosDataAcquisition import TransformStampedListener
 else:
-	from Listeners import RosbagStampedTopicLoader
+	from RosDataAcquisition import RosbagStampedTopicLoader
 
 # Create a TimeData Object
 td1 = TimedData(11)

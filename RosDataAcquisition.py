@@ -4,12 +4,14 @@ import numpy as np
 import rosbag as rb
 from TimedData import TimedData
 
+# Common Functionality for all acquisition methods
 def addTransformStamped(td, msg, translationID, rotationID):
     td.append();
     td.d[td.last, 0] = msg.header.stamp.to_sec();
     td.d[td.last, translationID:translationID+3] = np.array([msg.transform.translation.x,msg.transform.translation.y,msg.transform.translation.z]);
     td.d[td.last, rotationID:rotationID+4] = np.array([msg.transform.rotation.x,msg.transform.rotation.y,msg.transform.rotation.z,msg.transform.rotation.w]);
 
+# Listener on a Trans
 class TransformStampedListener:
     td = TimedData(0)
     translationID = 1
