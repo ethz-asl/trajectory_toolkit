@@ -7,7 +7,7 @@ from TimedData import TimedData
 # Common Functionality for all acquisition methods
 def addTransformStamped(td, msg, translationID, rotationID):
     td.append();
-    td.d[td.last, 0] = msg.header.stamp.to_sec();
+    td.d[td.last, td.timeID] = msg.header.stamp.to_sec();
     td.d[td.last, translationID:translationID+3] = np.array([msg.transform.translation.x,msg.transform.translation.y,msg.transform.translation.z]);
     td.d[td.last, rotationID:rotationID+4] = np.array([msg.transform.rotation.x,msg.transform.rotation.y,msg.transform.rotation.z,msg.transform.rotation.w]);
 
@@ -45,7 +45,7 @@ class RosbagStampedTopicLoader:
         # Fill time array
         counter = 0
         for topic, msg, t in self.bag.read_messages(topics=[self.topic]):
-            self.stamp[counter,0] = msg.header.stamp.to_sec();
+            self.stamp[counter, 0] = msg.header.stamp.to_sec();
             counter = counter + 1
             
     def loadTransformStamped(self, td, translationID, rotationID):

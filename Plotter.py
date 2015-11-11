@@ -1,54 +1,41 @@
 from pylab import *
 import matplotlib.pyplot as plt
+import numpy as np
+
 
 class Plotter:
-    t = 0
-    x = 0
-    tMax = 0
-    tMin = 0
-    tStart = 0
-    xMax = 0
-    xMin = 0
-    gotData = False
-    gotNew = False
-    line = []
+    td = []
+    lines = []
+    columnIDs = []
     figureId = 0
-    def __init__(self, figureId):
+    maxPoints = 1000;
+    
+    def __init__(self, td, figureId, maxPoints):
+        self.td = td
         self.figureId = figureId
         figure(self.figureId)
-        self.line, = plt.plot([], [])
-        title('Test Figure')
-        ylabel('x')
-        xlabel('t')
+        self.maxPoints = maxPoints
         grid(b=1)
-    def callback(self,data):
-        self.t = data.header.stamp.to_sec()
-        self.x = data.transform.translation.x
-        if(not self.gotData):
-            self.tMax = self.t+0.1
-            self.tMin = self.t
-            self.tStart = self.t
-            self.xMax = self.x+0.1
-            self.xMin = self.x
-        else:
-            if(self.tMax < self.t): self.tMax = self.t
-            if(self.tMin > self.t): self.tMin = self.t
-            if(self.xMax < self.x): self.xMax = self.x
-            if(self.xMin > self.x): self.xMin = self.x
-        self.gotData = True
-        self.gotNew = True
+
+    def initAsLivePlot(self, plotTitle='Live Plot', labelX='t [s]', labelY='data [?]'):
+        title(plotTitle)
+        xlabel(labelX);
+        ylabel(labelY);
+        plt.ion()            
+        plt.show();
+    
+    def addColumnToPlot(self, name, columnID, color):
+        # Extend lists
+        self.columnIDs.append(columnID);
+        self.lines.append(plt.plot([], [], c=color, label=name)[0])
+        plt.legend()
+     
     def refresh(self):
-#       ion()
-        if(self.gotNew):
-            figure(self.figureId)
-            self.line.set_xdata(np.append(self.line.get_xdata(), self.t-self.tStart))
-            self.line.set_ydata(np.append(self.line.get_ydata(), self.x))
-            axis([self.tMin-self.tStart, self.tMax-self.tStart, self.xMin, self.xMax])
-            draw()
-            show(block=False)
-    #       ioff()
-            self.gotNew = False
-if __name__ == '__main__':
-    matplotlib.pyplot.close('all')
-    plotter = Plotter()
-    plotter.addPlotterToTopic("/vicon/firefly_sbx/firefly_sbx")
+        figure(self.figureId)
+        stepSize = floor(self.td.length()/self.maxPoints)+1;
+        for i in xrange(0,len(self.columnIDs)):
+            self.lines[i].set_xdata(self.td.col(0)[1::stepSize])
+            self.lines[i].set_ydata(self.td.col(self.columnIDs[i])[1::stepSize])
+        plt.gca().relim()
+        plt.gca().autoscale_view(True,True,True)
+        plt.draw();

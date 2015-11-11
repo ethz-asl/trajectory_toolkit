@@ -16,10 +16,10 @@ class TimedData:
         self.d = np.empty([10,Nc]);
     
     # These getter are used to access the "meaningful" data
-    def D(self):
+    def d(self):
         return self.d[0:self.last, :];
     
-    def colD(self, columnID):
+    def col(self, columnID):
         # Check columnID validity
         if (columnID > np.shape(self.d)[1] ):
             print('You requested an invalid columnID = '+str(columnID) + '. Returning Zeros!');
@@ -27,7 +27,7 @@ class TimedData:
         # Return data
         return self.d[0:self.last, columnID];
 
-    def rowD(self, rowID):
+    def row(self, rowID):
         # Check rowID validity
         if(rowID > self.last):
             print('You requested an invalid rowID = '+str(rowID) + '. Returning Zeros!');
@@ -41,10 +41,12 @@ class TimedData:
         if np.shape(self.d)[0] == self.last:
             self.d = np.resize(self.d, (2*np.shape(self.d)[0], self.Nc));   
     
+    def length(self):
+        return (self.last + 1);
     # Math functions
     def computeDerivativeOfColumn(self, dataID, derivativeID):
         # NOTE: The array is longer than its data!
-        np.divide(np.diff(self.colD(dataID)), np.diff(self.colD(self.timeID)), self.d[1:self.last, derivativeID]);
+        np.divide(np.diff(self.col(dataID)), np.diff(self.col(self.timeID)), self.d[1:self.last, derivativeID]);
 
     def computeVeloctiyFromPosition(self, positonID, velocityID):
         self.computeDerivativeOfColumn(positonID, velocityID);

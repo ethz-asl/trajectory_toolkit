@@ -5,22 +5,24 @@
 # 	sys.path.insert(0, cmd_subfolder)
 # import listener
 # listener = reload(listener)
-# from listener import Plotter
 # import matplotlib.animation as animation
 
 # Set execution bools
-hasRosSubscriber = False;
-isLivePlotting = False;
+hasRosSubscriber = True;
+isLivePlotting = True;
 
 # Imports (Execution specific)
 import os, sys, inspect
 import matplotlib.pyplot as plt
 from TimedData import TimedData
+from Plotter import Plotter
+
 if hasRosSubscriber:
 	import rospy
 	from RosDataAcquisition import TransformStampedListener
 else:
 	from RosDataAcquisition import RosbagStampedTopicLoader
+
 
 # Create a TimeData Object
 td1 = TimedData(11)
@@ -37,16 +39,19 @@ if hasRosSubscriber:
 # matplotlib.rcParams['text.usetex'] = True
 # matplotlib.rcParams['pdf.fonttype'] = 42
 # matplotlib.rcParams['ps.fonttype'] = 42
-# plotter1 = Plotter(1)
 # plotter2 = Plotter(2)
 # rospy.Subscriber("/vicon/firefly_sbx/firefly_sbx", TransformStamped, plotter2.callback)
+
+plotter1 = Plotter(td1,1,10)
+plotter1.initAsLivePlot();
+plotter1.addColumnToPlot("Position x",1,'g')
+plotter1.addColumnToPlot("Position y",2,'r')
 
 # Acquire Data
 if hasRosSubscriber:
 	while not rospy.is_shutdown():
 	 	if isLivePlotting:
 	 		plotter1.refresh()
-	 		plotter2.refresh()
 	 	rate.sleep()
 else:
 	rbLoader = RosbagStampedTopicLoader('dataset.bag', '/vicon/firefly_sbx/firefly_sbx');
@@ -54,8 +59,10 @@ else:
 
 # Post-processing
 # td1.computeVeloctiyFromPosition(1, 8);
+plt.ioff()			
+plt.show();
 
 # Plotting
-plt.plot(td1.d[0:td1.last,0],td1.d[0:td1.last,1])
-plt.plot(td1.d[0:td1.last,0],td1.d[0:td1.last,2])
-plt.show()
+#plt.plot(td1.d[0:td1.last,0],td1.d[0:td1.last,1])
+#plt.plot(td1.d[0:td1.last,0],td1.d[0:td1.last,2])
+#plt.show()
