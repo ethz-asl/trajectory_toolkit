@@ -8,8 +8,8 @@
 # import matplotlib.animation as animation
 
 # Set execution bools
-hasRosSubscriber = True;
-isLivePlotting = True;
+hasRosSubscriber = False;
+isLivePlotting = False;
 
 # Imports (Execution specific)
 import os, sys, inspect
@@ -27,7 +27,8 @@ else:
 
 
 # Create a TimeData Object
-td1 = TimedData(11)
+td1 = TimedData(8)
+td2 = TimedData(8)
 
 # Init node or load ros bag
 if hasRosSubscriber:
@@ -44,9 +45,9 @@ if hasRosSubscriber:
 # plotter2 = Plotter(2)
 # rospy.Subscriber("/vicon/firefly_sbx/firefly_sbx", TransformStamped, plotter2.callback)
 
-plotter1 = Plotter(1,1,True)
-plotter1.addDataToSubplot(td1, 1, [1,1], 'g', 'Vicon');
-plotter1.addDataToSubplot(td1, 2, [1,1], 'r', 'IMU');
+plotter1 = Plotter(1,1,False)
+plotter1.addDataToSubplot(td1, 7, [1,1], 'g', '2015-11-11-17-18-29');
+plotter1.addDataToSubplot(td2, 7, [1,1], 'r', '2015-11-11-17-23-26');
 
 # Acquire Data
 if hasRosSubscriber:
@@ -55,8 +56,10 @@ if hasRosSubscriber:
 	 		plotter1.refresh()
 	 	rate.sleep()
 else:
-	rbLoader = RosbagStampedTopicLoader('dataset.bag', '/vicon/firefly_sbx/firefly_sbx');
+	rbLoader = RosbagStampedTopicLoader('2015-11-11-17-18-29.bag', '/rovio/transform');
 	rbLoader.loadTransformStamped(td1,1,4);
+	rbLoader = RosbagStampedTopicLoader('2015-11-11-17-23-26.bag', '/rovio/transform');
+	rbLoader.loadTransformStamped(td2,1,4);
 
 # Post-processing
 # td1.computeVeloctiyFromPosition(1, 8);
