@@ -1,5 +1,3 @@
-# Importing stuff
-import os, sys, inspect
 # from pylab import *
 # import numpy as np
 # cmd_subfolder = "../python"
@@ -9,46 +7,55 @@ import os, sys, inspect
 # listener = reload(listener)
 # from listener import Plotter
 # import matplotlib.animation as animation
+
+# Set execution bools
+hasRosSubscriber = True;
+isLivePlotting = False;
+
+# Imports (Execution specific)
+import os, sys, inspect
 import matplotlib.pyplot as plt
-import rospy
-import rosbag
-
 from TimedData import TimedData
-import Listeners
-from Listeners import TransformStampedListener
+if hasRosSubscriber:
+	import rospy
+	from Listeners import TransformStampedListener
+else:
+	from Listeners import RosbagStampedTopicLoader
 
-rospy.init_node('test', anonymous=True)
-rate = rospy.Rate(100)
+# Create a TimeData Object
+td1 = TimedData(11)
 
-td1 = TimedData(7)
-tsl = TransformStampedListener(td1,"/vicon/firefly_sbx/firefly_sbx",0,3)
- 
+# Init node or load ros bag
+if hasRosSubscriber:
+	rospy.init_node('test', anonymous=True)
+	rate = rospy.Rate(100)
+	tsl = TransformStampedListener(td1,"/vicon/firefly_sbx/firefly_sbx",1,4)
+
+
 # matplotlib.pyplot.close('all')
-
 # plt.ion()
-
 # matplotlib.rcParams['text.usetex'] = True
 # matplotlib.rcParams['pdf.fonttype'] = 42
 # matplotlib.rcParams['ps.fonttype'] = 42
-
-
-
 # plotter1 = Plotter(1)
 # plotter2 = Plotter(2)
-# 
 # rospy.Subscriber("/vicon/firefly_sbx/firefly_sbx", TransformStamped, plotter2.callback)
 
-print(rospy.is_shutdown())
-while not rospy.is_shutdown():
-# 	plotter1.refresh()
-# 	plotter2.refresh()
-	rate.sleep()
+# Acquire Data
+if hasRosSubscriber:
+	while not rospy.is_shutdown():
+	 	if isLivePlotting:
+	 		plotter1.refresh()
+	 		plotter2.refresh()
+	 	rate.sleep()
+else:
+	rbLoader = RosbagStampedTopicLoader('dataset.bag', '/vicon/firefly_sbx/firefly_sbx');
+	rbLoader.loadTransformStamped(td1,1,4);
 
+# Post-processing
+# td1.computeVeloctiyFromPosition(1, 8);
 
-# print((*(td1.d))[0])
-plt.plot(td1.t,td1.d)
-
+# Plotting
+plt.plot(td1.d[0:td1.last,0],td1.d[0:td1.last,1])
+plt.plot(td1.d[0:td1.last,0],td1.d[0:td1.last,2])
 plt.show()
-
-
-
