@@ -16,6 +16,8 @@ import os, sys, inspect
 import matplotlib.pyplot as plt
 from TimedData import TimedData
 from Plotter import Plotter
+import numpy as np
+
 
 if hasRosSubscriber:
 	import rospy
@@ -42,10 +44,9 @@ if hasRosSubscriber:
 # plotter2 = Plotter(2)
 # rospy.Subscriber("/vicon/firefly_sbx/firefly_sbx", TransformStamped, plotter2.callback)
 
-plotter1 = Plotter(td1,1,10)
-plotter1.initAsLivePlot();
-plotter1.addColumnToPlot("Position x",1,'g')
-plotter1.addColumnToPlot("Position y",2,'r')
+plotter1 = Plotter(1,1,True)
+plotter1.addDataToSubplot(td1, 1, [1,1], 'g', 'Vicon');
+plotter1.addDataToSubplot(td1, 2, [1,1], 'r', 'IMU');
 
 # Acquire Data
 if hasRosSubscriber:
@@ -59,10 +60,7 @@ else:
 
 # Post-processing
 # td1.computeVeloctiyFromPosition(1, 8);
-plt.ioff()			
-plt.show();
 
 # Plotting
-#plt.plot(td1.d[0:td1.last,0],td1.d[0:td1.last,1])
-#plt.plot(td1.d[0:td1.last,0],td1.d[0:td1.last,2])
-#plt.show()
+plotter1.show();
+
