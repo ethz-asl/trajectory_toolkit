@@ -8,8 +8,8 @@
 # import matplotlib.animation as animation
 
 # Set execution bools
-hasRosSubscriber = True;
-isLivePlotting = True;
+hasRosSubscriber = False;
+isLivePlotting = False;
 
 # Imports (Execution specific)
 import os, sys, inspect
@@ -29,6 +29,7 @@ else:
 # Create a TimeData Object
 td1 = TimedData(8)
 td2 = TimedData(8)
+td1.test()
 
 # Init node or load ros bag
 if hasRosSubscriber:
@@ -65,5 +66,5 @@ else:
 # td1.computeVeloctiyFromPosition(1, 8);
 
 # Plotting
-plotter1.show();
+#plotter1.show();
 
