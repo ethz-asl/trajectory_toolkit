@@ -8,8 +8,8 @@
 # import matplotlib.animation as animation
 
 # Set execution bools
-hasRosSubscriber = False;
-isLivePlotting = False;
+hasRosSubscriber = True;
+isLivePlotting = True;
 
 # Imports (Execution specific)
 import os, sys, inspect
@@ -45,9 +45,9 @@ if hasRosSubscriber:
 # plotter2 = Plotter(2)
 # rospy.Subscriber("/vicon/firefly_sbx/firefly_sbx", TransformStamped, plotter2.callback)
 
-plotter1 = Plotter(1,1,False)
-plotter1.addDataToSubplot(td1, 7, [1,1], 'g', '2015-11-11-17-18-29');
-plotter1.addDataToSubplot(td2, 7, [1,1], 'r', '2015-11-11-17-23-26');
+plotter1 = Plotter(1, [3,1], isLivePlotting)
+plotter1.addDataToSubplot(td1, 1, 1, 'g', 'Position X');
+plotter1.addDataToSubplot(td1, 2, 1, 'b', 'Position Y');
 
 # Acquire Data
 if hasRosSubscriber:

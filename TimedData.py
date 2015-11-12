@@ -1,5 +1,5 @@
 import numpy as np
-
+import Quaternion
 
 class TimedData:
     # Data numpy array
@@ -52,3 +52,8 @@ class TimedData:
         self.computeDerivativeOfColumn(positonID, velocityID);
         self.computeDerivativeOfColumn(positonID+1, velocityID+1);
         self.computeDerivativeOfColumn(positonID+2, velocityID+2);
+    
+    def test(self):
+        q1 = np.array([1,2,3,4])
+        q2 = np.array([1,2,3,4])
+        

@@ -5,36 +5,33 @@ import numpy as np
 
 class Plotter:
     td = []
+    colIDs = []
     lines = []
     axes = []
-    colIDs = []
-    noSubplots = 1
+    subplotDim = [1,1]
     figureId = 0
     maxPoints = 1000;
     
-    def __init__(self, figureId, noSubplots, isLive=False, maxPoints=1000):
+    def __init__(self, figureId, subplotDim, isLive=False, maxPoints=1000):
         self.figureId = figureId
         self.maxPoints = maxPoints
-        self.noSubplots = noSubplots
+        self.subplotDim = subplotDim
+        # Open Plot when live plotting
         if isLive:
             figure(self.figureId)
             plt.ion()            
             plt.show();
     
-    def addDataToAxis(self, td, colID, axis, color, name):
-        # Extend lists
+    def addDataToSubplot(self, td, colID, plotID, color, name):
         self.colIDs.append(colID);
-        self.axes.append(axis);
         self.td.append(td)
+        # Add lines to subplot
+        figure(self.figureId)
+        axis = subplot(self.subplotDim[0], self.subplotDim[1], plotID)
+        self.axes.append(axis);
         self.lines.append(axis.plot([], [], c=color, label=name)[0])
         plt.legend()
-    
-    def addDataToSubplot(self, td, colID, subPlotIdx, color, name):
-        # Add plots
-        figure(self.figureId)
-        axis = subplot(self.noSubplots, subPlotIdx[0], subPlotIdx[1])
-        self.addDataToAxis(td, colID, axis, color, name)
-        
+
     def refresh(self):
         figure(self.figureId)
         for i in xrange(0,len(self.colIDs)):
