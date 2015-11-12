@@ -54,15 +54,11 @@ class TimedData:
         self.computeDerivativeOfColumn(positonID+1, velocityID+1);
         self.computeDerivativeOfColumn(positonID+2, velocityID+2);
     
-    def test(self):
-#         n=1000000
-#         q = np.ones([n,4])
-#         for i in range(0,n):
-#             q1[i,:] = Quaternion.q_inverse(q[i,:])
-        q2 = np.array([[1, 0, 1, 0],[1, 0, 1, 0]])
-        q1 = np.array([Quaternion.q_normalized(np.array([1, 0, 0, 1])),[1, 0, 1, 0]])
-        v = np.array([[1, 0, 0],[4,5,6]])
-        print(Quaternion.q_rotate(q1,v))
+    def interpolate(self, tdOut):
+        print()
+        #np.argmax(self.col(self.timeID)>tdOut[:,self.timeID])
+        
+
         #Quaternion.q_normalize(q)
         #print(q)
 

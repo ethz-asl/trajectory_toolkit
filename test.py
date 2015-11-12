@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 from TimedData import TimedData
 from Plotter import Plotter
 import numpy as np
+import Quaternion
 
 
 if hasRosSubscriber:
@@ -29,7 +30,7 @@ else:
 # Create a TimeData Object
 td1 = TimedData(8)
 td2 = TimedData(8)
-td1.test()
+Quaternion.tests()
 
 # Init node or load ros bag
 if hasRosSubscriber:
