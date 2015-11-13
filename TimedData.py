@@ -2,6 +2,7 @@ import numpy as np
 import Quaternion
 import time
 from __builtin__ import classmethod
+from termcolor import colored
 
 class TimedData:
     # Data numpy array
@@ -28,27 +29,27 @@ class TimedData:
             if(columnID < self.Nc):    
                 self.d[:self.end(),columnID] = data;
             else:
-                print('Did not set column! No column with that ID!')
+                print(colored('WARNING: Did not set column! No column with that ID!','yellow'))
         else:
-            print('Did not set column! Wrong data size!');
+            print(colored('WARNING: Did not set column! Wrong data size!','yellow'));
     
     def setRow(self, data, rowID): #TESTED
         if(np.shape(data)[0] == self.Nc):
             if(rowID < self.end()):    
                 self.d[rowID,:] = data;
             else:
-                print('Did not set row! No row with that ID!')
+                print(colored('WARNING: Did not set row! No row with that ID!','yellow'))
         else:
-            print('Did not set row! Wrong data size!');
+            print(colored('WARNING: Did not set row! Wrong data size!','yellow'));
             
     def setBlock(self, data, rowID, colID):
         if(np.shape(data)[0] <= (self.end()-rowID) ):
             if(np.shape(data)[1] <= (self.Nc-colID) ): 
                 self.d[rowID:rowID+np.shape(data)[0],colID:colID+np.shape(data)[1]] = data;
             else:
-                print('Did not set block! Columns exceed matrix size!')
+                print(colored('WARNING: Did not set block! Columns exceed matrix size!','yellow'))
         else:
-            print('Did not set block! Rows exceed matrix size!');
+            print(colored('WARNING: Did not set block! Rows exceed matrix size!','yellow'));
     
     # These getter are used to access the "meaningful" data
     def D(self): #TESTED
@@ -57,7 +58,7 @@ class TimedData:
     def col(self, columnID): #TESTED
         # Check columnID validity
         if (columnID > (np.shape(self.d)[1]-1) ):
-            print('You requested an invalid columnID = '+str(columnID) + '. Returning Zeros!');
+            print(colored('WARNING: You requested an invalid columnID = '+str(columnID) + '. Returning Zeros!','yellow'));
             return np.zeros([self.end()]); 
         # Return data
         return self.d[0:self.end(), columnID];
@@ -65,7 +66,7 @@ class TimedData:
     def row(self, rowID): #TESTED
         # Check rowID validity
         if(rowID > self.last):
-            print('You requested an invalid rowID = '+str(rowID) + '. Returning Zeros!');
+            print(colored('WARNING: You requested an invalid rowID = '+str(rowID) + '. Returning Zeros!','yellow'));
             return np.zeros([self.Nc]); 
         # Return data
         return self.d[rowID,:];     
@@ -88,12 +89,16 @@ class TimedData:
         self.computeDerivativeOfColumn(positonID+1, velocityID+1);
         self.computeDerivativeOfColumn(positonID+2, velocityID+2);
     
-    def interpolate(self, tdOut, colID):
+    def interpolateColumns(self, tdOut, colIDs): #TESTED
+        for colID in colIDs:
+            self.interpolateColumn(tdOut, colID)
+    
+    def interpolateColumn(self, tdOut, colID): #TESTED
         # NOTE: Values outside of the timerange of self are set to the first rsp. last value (no extrapolation)
         if(np.all(np.diff(tdOut.col(tdOut.timeID)) > 0)):
-            print(np.interp(tdOut.col(tdOut.timeID), self.col(self.timeID), self.col(colID)))
+            tdOut.setCol(np.interp(tdOut.col(tdOut.timeID), self.col(self.timeID), self.col(colID)),colID)
         else:
-            print('Time values must be incresing.')
+            print(colored('WARNING: Interpolation of column '+str(colID)+' failed! Time values must be increasing.','yellow'))
 
     def basicTests(self):
         print('Array with times 1-5:')
@@ -136,7 +141,17 @@ class TimedData:
         print(self.end())
     
     def advancedTests(self):
-        td2 = TimeData(4)
+        td2 = TimedData(4)
+        self.initEmptyFromTimes([1,2,3,4], 4)
+        td2.initEmptyFromTimes([0,1.5,2.5,5], 4)
+        self.setBlock([[1,2,3],[2,3,2],[4,2,1],[3,4,3]], 0, 1)
+        print('td 1:')
+        print(self.D())
+        print('td 2: to interpolate')
+        print(td2.D())
+        self.interpolateColumns(td2, [1,3])
+        print('td 2: interpolated')
+        print(td2.D())
         
 
         

@@ -22,14 +22,14 @@ class Plotter:
             plt.ion()            
             plt.show();
     
-    def addDataToSubplot(self, td, colID, plotID, color, name):
+    def addDataToSubplot(self, td, colID, plotID, color, legend=''):
         self.colIDs.append(colID);
         self.td.append(td)
         # Add lines to subplot
         figure(self.figureId)
         axis = subplot(self.subplotDim[0], self.subplotDim[1], plotID)
         self.axes.append(axis);
-        self.lines.append(axis.plot([], [], c=color, label=name)[0])
+        self.lines.append(axis.plot([], [], c=color, label=legend)[0])
         plt.legend()
 
     def refresh(self):

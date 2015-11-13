@@ -30,8 +30,8 @@ else:
 # Create a TimeData Object
 td1 = TimedData(8)
 td2 = TimedData(8)
-
 td1.basicTests();
+td1.advancedTests();
 # Quaternion.tests();
  
 # Init node or load ros bag
@@ -41,7 +41,7 @@ if hasRosSubscriber:
 	tsl = TransformStampedListener(td1,"/vicon/firefly_sbx/firefly_sbx",1,4)
  
 plotter1 = Plotter(1, [3,1], isLivePlotting)
-plotter1.addDataToSubplot(td1, 1, 1, 'g', 'Position X');
+plotter1.addDataToSubplot(td1, 1, 1, 'g');
 plotter1.addDataToSubplot(td2, 1, 1, 'b', 'Position Y');
  
 # Acquire Data
