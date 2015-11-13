@@ -40,6 +40,15 @@ class TimedData:
                 print('Did not set row! No row with that ID!')
         else:
             print('Did not set row! Wrong data size!');
+            
+    def setBlock(self, data, rowID, colID):
+        if(np.shape(data)[0] <= (self.end()-rowID) ):
+            if(np.shape(data)[1] <= (self.Nc-colID) ): 
+                self.d[rowID:rowID+np.shape(data)[0],colID:colID+np.shape(data)[1]] = data;
+            else:
+                print('Did not set block! Columns exceed matrix size!')
+        else:
+            print('Did not set block! Rows exceed matrix size!');
     
     # These getter are used to access the "meaningful" data
     def D(self): #TESTED
@@ -81,10 +90,6 @@ class TimedData:
     
     def interpolate(self, tdOut, colID):
         # NOTE: Values outside of the timerange of self are set to the first rsp. last value (no extrapolation)
-        print(tdOut.col(tdOut.timeID))
-        print(self.col(self.timeID))
-        print(self.col(colID))
-        
         if(np.all(np.diff(tdOut.col(tdOut.timeID)) > 0)):
             print(np.interp(tdOut.col(tdOut.timeID), self.col(self.timeID), self.col(colID)))
         else:
@@ -108,6 +113,9 @@ class TimedData:
         self.setCol(np.array([1,2,3,4]),4)
         print('Try setting 5th column to 1,2,3,4,5')
         self.setCol(np.array([1,2,3,4,5]),4)
+        print('Set block to [[1,2],[3,4]] at 2,2')
+        self.setBlock(np.array([[1,2],[3,4]]),2,2)
+        print(self.D())
         print('Get first row')
         print(self.row(0))
         print('Get second col')
@@ -126,5 +134,9 @@ class TimedData:
         print(self.last)
         print('Length is:')
         print(self.end())
+    
+    def advancedTests(self):
+        td2 = TimeData(4)
+        
 
         
