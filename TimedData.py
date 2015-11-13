@@ -3,6 +3,8 @@ import Quaternion
 import time
 from __builtin__ import classmethod
 from termcolor import colored
+import math
+import Utils
 
 class TimedData:
     # Data numpy array
@@ -18,11 +20,13 @@ class TimedData:
         self.last = -1;
         self.d = np.empty([10,Nc]);
     
-    def initEmptyFromTimes(self, times, Nc): #TESTED
+    def initEmptyFromTimes(self, times): #TESTED
         self.last = np.shape(times)[0]-1
-        self.Nc = Nc
-        self.d = np.zeros([np.shape(times)[0], Nc])
+        self.d = np.zeros([np.shape(times)[0], self.Nc])
         self.d[:self.end(),self.timeID] = times;
+    
+    def setColumnToSine(self, colID, amplitude, frequency, phaseShift):
+        self.setCol(amplitude * np.sin(2 * np.pi * frequency * self.getTime() + phaseShift), colID)
     
     def setCol(self, data, columnID): #TESTED
         if(np.shape(data)[0] == self.end()):
@@ -71,6 +75,15 @@ class TimedData:
         # Return data
         return self.d[rowID,:];     
    
+    def getTime(self):
+        return self.col(self.timeID)
+   
+    def getLastTime(self):
+        return self.col(self.timeID)[-1]
+    
+    def getFirstTime(self):
+        return self.col(self.timeID)[0]
+   
     # Append an entry, resize array
     def append(self): #TESTED
         if np.shape(self.d)[0] == self.end():
@@ -80,103 +93,159 @@ class TimedData:
     def end(self): #TESTED
         return (self.last + 1);
     
+    def length(self): #TESTED
+        return (self.last + 1);
+    
     # Math functions
-    def computeDerivativeOfColumn(self, dataID, derivativeID):
+    def computeDerivativeOfColumn(self, dataID, derivativeID): #TESTED
         dp = np.diff(self.col(dataID))
-        dt = np.diff(self.col(self.timeID))
+        dt = np.diff(self.getTime())
         self.d[1:self.end(),derivativeID] = np.divide(dp,dt);
 
-    def computeVeloctiyFromPosition(self, positonID, velocityID):
-        self.computeDerivativeOfColumn(positonID, velocityID);
-        self.computeDerivativeOfColumn(positonID+1, velocityID+1);
-        self.computeDerivativeOfColumn(positonID+2, velocityID+2);
+    def computeVector3Derivative(self, inputID, outputID): #TESTED
+        self.computeDerivativeOfColumn(inputID,   outputID);
+        self.computeDerivativeOfColumn(inputID+1, outputID+1);
+        self.computeDerivativeOfColumn(inputID+2, outputID+2);
         
     def computeRotationalRateFromAttitude(self, attitudeID, rotationalrateID):
         dv = Quaternion.q_boxMinus(self.d[1:self.end(),attitudeID:attitudeID+4],self.d[0:self.last,attitudeID:attitudeID+4])
-        dt = np.diff(self.col(self.timeID))
+        dt = np.diff(self.getTime())
         self.d[1:self.end(),rotationalrateID:rotationalrateID+3] = np.divide(dv,dt);
         
-    def interpolateColumns(self, tdOut, colIDs): #TESTED
-        for colID in colIDs:
-            self.interpolateColumn(tdOut, colID)
-    
-    def interpolateColumn(self, tdOut, colID): #TESTED
-        # NOTE: Values outside of the timerange of self are set to the first rsp. last value (no extrapolation)
-        if(np.all(np.diff(tdOut.col(tdOut.timeID)) > 0)):
-            tdOut.setCol(np.interp(tdOut.col(tdOut.timeID), self.col(self.timeID), self.col(colID)),colID)
+    def interpolateColumns(self, tdOut, tdOutColIDs, colIDs=None): #TESTED
+        # Allow interpolating in to other columns / default is into same column
+        if colIDs is None:
+            colIDs = tdOutColIDs
+        # ColIDs must match in size to be interpolated
+        if(len(tdOutColIDs)==len(colIDs)):
+            for i in xrange(0,len(tdOutColIDs)):
+                self.interpolateColumn(tdOut, colIDs[i], tdOutColIDs[i])
         else:
-            print(colored('WARNING: Interpolation of column '+str(colID)+' failed! Time values must be increasing.','yellow'))
+            print(colored('WARNING: Interpolation failed! ColIDs did not match in size.','yellow'))
 
-    def getTimeOffset(self,tdIn):
-        return
+    def interpolateColumn(self, tdOut, tdOutColID, colID=None): #TESTED
+        # NOTE: Values outside of the timerange of self are set to the first rsp. last value (no extrapolation)
+        # Allow interpolating in to other columns / default is into same column
+        if colID is None:
+            colID = tdOutColID
+        # When times are increasing interpolate using built in numpy interpolation
+        if(np.all(np.diff(tdOut.getTime()) > 0)):
+            tdOut.setCol(np.interp(tdOut.getTime(), self.getTime(), self.col(colID)),tdOutColID)
+        else:
+            print(colored('WARNING: Interpolation failed! Time values must be increasing.','yellow'))
     
+    def interpolateQuaternion(self, tdOut, tdOutColID, colID):
+        # All quaternions before self start are set to the first entry
+        counter = 0;
+        while tdOut.col(tdOut.timeID)[counter] <= self.col(self.timeID[0] ):
+            tdOut.d[counter,tdOutColID:tdOutColID+4] = self.d[0,colID:colID+4]
+            counter += 1
+        # Interpolation 
+        while (counter < tdOut.end()):
+            Quaternion.q_slerp()
+        
+    def getTimeOffset(self,tdIn, tdInRorID, rorID=None):
+        # Allow interpolating in to other columns / default is into same column
+        if rorID is None:
+            rorID = tdInRorID
+        # Make timing calculation
+        dtIn = tdIn.getLastTime()-tdIn.getFirstTime()
+        dt = self.getLastTime()-self.getFirstTime()
+        timeIncrement = min(dt/(self.length()-1), dtIn/(tdIn.length()-1))
+        N = math.ceil(min(dt, dtIn)/timeIncrement)+1
+        # Interpolate ROR of trajectories
+        td1 = TimedData(5);
+        td2 = TimedData(5);
+        td1.initEmptyFromTimes(self.getFirstTime()+np.arange(N)*timeIncrement)
+        td2.initEmptyFromTimes(tdIn.getFirstTime()+np.arange(N)*timeIncrement)
+        self.interpolateColumns(td1, range(rorID,rorID+3), range(1,4))
+        tdIn.interpolateColumns(td2, range(tdInRorID,tdInRorID+3), range(1,4))
+        # Calc norm of omega
+        td1.D()[:,4] = Utils.norm(td1.D()[:,1:4])
+        td2.D()[:,4] = Utils.norm(td2.D()[:,1:4])
+        # Calc COnvolution
+        conv = np.convolve(td1.D()[:,4], td2.D()[:,4])
+        # Deviation of the maximum convolution from the middle of the convolution vector  
+        n = np.argmax(conv) - (math.ceil(np.shape(conv)[0]/2.0)-1)
+        return timeIncrement*n + tdIn.getFirstTime() - self.getFirstTime()
     
+    @classmethod
     def basicTests(self):
+        td1 = TimedData(4)
         print('Array with times 1-5:')
-        self.initEmptyFromTimes(np.array([1,2,3,4,5]), 4)
-        print(self.D())
+        td1.initEmptyFromTimes(np.array([1,2,3,4,5]))
+        print(td1.D())
         print('Set second row to 1,2,3,4')
-        self.setRow(np.array([1,2,3,4]),1)
-        print(self.D())
+        td1.setRow(np.array([1,2,3,4]),1)
+        print(td1.D())
         print('Try setting second row to 1,2,3,4,5')
-        self.setRow(np.array([1,2,3,4,5]),1)
+        td1.setRow(np.array([1,2,3,4,5]),1)
         print('Try setting 6th row to 1,2,3,4')
-        self.setRow(np.array([1,2,3,4]),5)
+        td1.setRow(np.array([1,2,3,4]),5)
         print('Set second column to 10,11,12,13,14')
-        self.setCol(np.array([10,11,12,13,14]),1)
-        print(self.D())
+        td1.setCol(np.array([10,11,12,13,14]),1)
+        print(td1.D())
         print('Try setting second column to 1,2,3,4')
-        self.setCol(np.array([1,2,3,4]),4)
+        td1.setCol(np.array([1,2,3,4]),4)
         print('Try setting 5th column to 1,2,3,4,5')
-        self.setCol(np.array([1,2,3,4,5]),4)
+        td1.setCol(np.array([1,2,3,4,5]),4)
         print('Set block to [[1,2],[3,4]] at 2,2')
-        self.setBlock(np.array([[1,2],[3,4]]),2,2)
-        print(self.D())
+        td1.setBlock(np.array([[1,2],[3,4]]),2,2)
+        print(td1.D())
         print('Get first row')
-        print(self.row(0))
+        print(td1.row(0))
         print('Get second col')
-        print(self.col(1))
+        print(td1.col(1))
         print('Last entry is at: ')
-        print(self.last)
+        print(td1.last)
         print('Length is:')
-        print(self.end())
+        print(td1.end())
         print('Append Data (duplicates array):')
-        self.append()
+        td1.append()
         print('Total Array:')
-        print(self.d)
+        print(td1.d)
         print('Reduced (meaningful) part of the array')
-        print(self.D())
+        print(td1.D())
         print('Last entry is at: ')
-        print(self.last)
+        print(td1.last)
         print('Length is:')
-        print(self.end())
-    
+        print(td1.end())
+
+    @classmethod
     def advancedTests(self):
+        td1 = TimedData(15)
         td2 = TimedData(15)
-        self.initEmptyFromTimes([1,2,3,4], 15)
-        td2.initEmptyFromTimes([0,1.5,2.5,5], 15)
+        td1.initEmptyFromTimes([1,2,3,4])
+        td2.initEmptyFromTimes([0,1.5,2.5,5])
         # Set Position
-        self.setBlock([[1,2,3],[2,3,2],[4,2,1],[3,4,3]], 0, 1)
+        td1.setBlock([[1,2,3],[2,3,2],[4,2,1],[3,4,3]], 0, 1)
         # Set Quaternion
         q11 = Quaternion.q_exp(np.array([0.1,0.2,0.3]))
         q12 = Quaternion.q_exp(np.array([0.1,0.2,0.32]))
         q13 = Quaternion.q_exp(np.array([0.1,0.2,0.33]))
         q14 = Quaternion.q_exp(np.array([0.1,0.2,0.36]))
-        
-        self.setBlock(np.array([q11,q12,q13,q14]), 0, 4)
+        q21 = Quaternion.q_exp(np.array([0.5,0.2,0.3]))
+        q22 = Quaternion.q_exp(np.array([0.4,0.2,0.32]))
+        q23 = Quaternion.q_exp(np.array([0.3,0.2,0.33]))
+        q24 = Quaternion.q_exp(np.array([0.1,0.2,0.36]))
+
+        td1.setBlock(np.array([q11,q12,q13,q14]), 0, 4)
+        td2.setBlock(np.array([q21,q22,q23,q24]), 0, 4)
+
         print('td 1:')
-        print(self.D())
+        print(td1.D())
         print('td 2: to interpolate')
         print(td2.D())
-        self.interpolateColumns(td2, [1,3])
+        td1.interpolateColumns(td2, [1,3],[2,1])
         print('td 2: interpolated')
         print(td2.D())
-        self.computeVeloctiyFromPosition(1, 8)
+        td1.computeVector3Derivative(1, 8)
         print('td 1: VEL')
-        print(self.D())
-        self.computeRotationalRateFromAttitude(4, 11)
+        print(td1.D())
+        td1.computeRotationalRateFromAttitude(4, 11)
+        td2.computeRotationalRateFromAttitude(4, 11)
         print('td 1: ROR')
-        print(self.D())
-        
-
+        print(td1.D())
+        print('Time Offset')
+        print(td1.getTimeOffset(td2, 11,11))
         

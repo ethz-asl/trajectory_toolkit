@@ -1,7 +1,5 @@
 import numpy as np
-
-def norm(v): #TESTED
-    return np.sum(v**2,axis=-1)**(1./2)
+import Utils
 
 def q_mult(q1, q2): #TESTED
     q = np.zeros_like(q1)
@@ -20,7 +18,7 @@ def q_inverse(q): #TESTED
     return qInv
 
 def q_norm(q): #TESTED
-    return norm(q)
+    return Utils.norm(q)
 
 def q_normalize(q): 
     print('Not implemented!')
@@ -44,7 +42,7 @@ def q_exp(v): #TESTED
         q = np.zeros([4])
     else:
         q = np.zeros([np.shape(v)[0],4])
-    theta = norm(v);
+    theta = Utils.norm(v);
     q.T[1:4,] = (np.sin(theta*0.5) / theta*v.T)
     q.T[0,] = np.cos(theta*0.5).T
     return q
