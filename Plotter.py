@@ -36,7 +36,7 @@ class Plotter:
         figure(self.figureId)
         for i in xrange(0,len(self.colIDs)):
             # Subsample Data
-            stepSize = floor(self.td[i].length()/self.maxPoints)+1;
+            stepSize = floor(self.td[i].end()/self.maxPoints)+1;
             self.lines[i].set_xdata(self.td[i].col(0)[1::stepSize])
             self.lines[i].set_ydata(self.td[i].col(self.colIDs[i])[1::stepSize])
         # Update axis limits

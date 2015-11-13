@@ -1,10 +1,7 @@
 import numpy as np
 
 def norm(v): #TESTED
-    return sumOfSquare(v)**(1./2)
-
-def sumOfSquare(v): #TESTED
-    return np.sum(np.abs(v)**2,axis=-1)
+    return np.sum(v**2,axis=-1)**(1./2)
 
 def q_mult(q1, q2): #TESTED
     q = np.zeros_like(q1)
@@ -25,9 +22,8 @@ def q_inverse(q): #TESTED
 def q_norm(q): #TESTED
     return norm(q)
 
-def q_normalize(q):
-    norm = q_norm(q)
-    q.T[0:4,] /= norm
+def q_normalize(q): 
+    print('Not implemented!')
     
 def q_normalized(q): #TESTED
     return (q.T[0:4,] / q_norm(q)).T
@@ -77,4 +73,5 @@ def tests():
     print(q_log(q_exp(v1)))
     print('should equal v')
     print(v1)
+    print('normalize quaternion [1,2,0,2]')
     
