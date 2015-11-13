@@ -32,7 +32,7 @@ td1 = TimedData(8)
 td2 = TimedData(8)
 td1.basicTests();
 td1.advancedTests();
-# Quaternion.tests();
+Quaternion.tests();
  
 # Init node or load ros bag
 if hasRosSubscriber:

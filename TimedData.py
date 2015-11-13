@@ -100,6 +100,10 @@ class TimedData:
         else:
             print(colored('WARNING: Interpolation of column '+str(colID)+' failed! Time values must be increasing.','yellow'))
 
+    def getTimeOffset(self,tdIn):
+        return
+    
+    
     def basicTests(self):
         print('Array with times 1-5:')
         self.initEmptyFromTimes(np.array([1,2,3,4,5]), 4)

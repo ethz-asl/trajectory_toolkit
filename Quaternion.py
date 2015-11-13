@@ -33,33 +33,49 @@ def q_rotate(q1, v1): #TESTED
     q2.T[1:4,] = v1.T;
     return (q_mult(q_mult(q1, q2), q_inverse(q1)).T[1:,]).T
 
-def q_log(q):
+def q_log(q): #TESTED
     root = np.sqrt(1.0-q.T[0,]*q.T[0,])
     theta = 2.0*np.arccos(q.T[0,])
     return (theta/root*q.T[1:4,]).T;
 
-def q_exp(v):
-    q = np.zeros([np.shape(v)[0],4])
+def q_exp(v): #TESTED
+    # TODO: find better solution?
+    if v.ndim == 1:
+        q = np.zeros([4])
+    else:
+        q = np.zeros([np.shape(v)[0],4])
     theta = norm(v);
     q.T[1:4,] = (np.sin(theta*0.5) / theta*v.T)
     q.T[0,] = np.cos(theta*0.5).T
     return q
 
-def q_boxPlus(q,v):
+def q_boxPlus(q,v): #TESTED
     return q_mult(q_exp(v),q)
     
-def q_boxMinus(q1,q2):
+def q_boxMinus(q1,q2): #TESTED
     return q_log(q_mult(q1,q_inverse(q2)))
     
-def q_slerp(q1,q2,t):
+def q_slerp(q1,q2,t): #TESTED
     return q_boxPlus(q1, (t*q_boxMinus(q2, q1)))
 
+def q_getRPY(q): #UNTESTED
+    # TODO: find better solution?
+    if q.ndim == 1:
+        rpy = np.zeros([3])
+    else:
+        rpy = np.zeros([np.shape(q)[0],4])
+    rpy.T[0,] = np.arctan2(2*q.T[2,]*q.T[0,]-2*q.T[1,]*q.T[3,], 1 - 2*q.T[2,]*q.T[2,] - 2*q.T[3,]*q.T[3,]);
+    rpy.T[1,] = np.arctan2(2*q.T[1,]*q.T[0,]-2*q.T[2,]*q.T[3,], 1 - 2*q.T[1,]*q.T[1,] - 2*q.T[3,]*q.T[3,]);
+    rpy.T[2,] = np.arcsin(2*q.T[1,]*q.T[2,]+2*q.T[3,]*q.T[0,]);
+    return rpy
+
 def tests():
-    v1 = np.array([[0.2, 0.2, 0.4],[0.2,0.4,0.1]])
-    v2 = np.array([[1, 0, 0],[0.2,0.4,1]])                
+    v1 = np.array([0.2, 0.2, 0.4])#,[0.2,0.4,0.1]])
+    v2 = np.array([1, 0, 0])#,[0.2,0.4,1]])                
     q1 = q_exp(v1)
+    print(q1)
     q2 = q_exp(v2)
-    v=np.array([[1, 2, 3],[0,0,1]])   
+    v=np.array([1, 2, 3])#,[0,0,1]])   
     print('RUN TESTS')
     print('(q1 x q2)(v):')
     print(q_rotate(q_mult(q1,q2),v))
@@ -73,5 +89,3 @@ def tests():
     print(q_log(q_exp(v1)))
     print('should equal v')
     print(v1)
-    print('normalize quaternion [1,2,0,2]')
-    
