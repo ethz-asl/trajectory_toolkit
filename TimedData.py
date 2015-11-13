@@ -82,13 +82,20 @@ class TimedData:
     
     # Math functions
     def computeDerivativeOfColumn(self, dataID, derivativeID):
-        self.d[1:self.end(),derivativeID] = np.divide(np.diff(self.col(dataID)), np.diff(self.col(self.timeID)));
+        dp = np.diff(self.col(dataID))
+        dt = np.diff(self.col(self.timeID))
+        self.d[1:self.end(),derivativeID] = np.divide(dp,dt);
 
     def computeVeloctiyFromPosition(self, positonID, velocityID):
         self.computeDerivativeOfColumn(positonID, velocityID);
         self.computeDerivativeOfColumn(positonID+1, velocityID+1);
         self.computeDerivativeOfColumn(positonID+2, velocityID+2);
-    
+        
+    def computeRotationalRateFromAttitude(self, attitudeID, rotationalrateID):
+        dv = Quaternion.q_boxMinus(self.d[1:self.end(),attitudeID:attitudeID+4],self.d[0:self.last,attitudeID:attitudeID+4])
+        dt = np.diff(self.col(self.timeID))
+        self.d[1:self.end(),rotationalrateID:rotationalrateID+3] = np.divide(dv,dt);
+        
     def interpolateColumns(self, tdOut, colIDs): #TESTED
         for colID in colIDs:
             self.interpolateColumn(tdOut, colID)
@@ -145,10 +152,18 @@ class TimedData:
         print(self.end())
     
     def advancedTests(self):
-        td2 = TimedData(4)
-        self.initEmptyFromTimes([1,2,3,4], 4)
-        td2.initEmptyFromTimes([0,1.5,2.5,5], 4)
+        td2 = TimedData(15)
+        self.initEmptyFromTimes([1,2,3,4], 15)
+        td2.initEmptyFromTimes([0,1.5,2.5,5], 15)
+        # Set Position
         self.setBlock([[1,2,3],[2,3,2],[4,2,1],[3,4,3]], 0, 1)
+        # Set Quaternion
+        q11 = Quaternion.q_exp(np.array([0.1,0.2,0.3]))
+        q12 = Quaternion.q_exp(np.array([0.1,0.2,0.32]))
+        q13 = Quaternion.q_exp(np.array([0.1,0.2,0.33]))
+        q14 = Quaternion.q_exp(np.array([0.1,0.2,0.36]))
+        
+        self.setBlock(np.array([q11,q12,q13,q14]), 0, 4)
         print('td 1:')
         print(self.D())
         print('td 2: to interpolate')
@@ -156,6 +171,12 @@ class TimedData:
         self.interpolateColumns(td2, [1,3])
         print('td 2: interpolated')
         print(td2.D())
+        self.computeVeloctiyFromPosition(1, 8)
+        print('td 1: VEL')
+        print(self.D())
+        self.computeRotationalRateFromAttitude(4, 11)
+        print('td 1: ROR')
+        print(self.D())
         
 
         
