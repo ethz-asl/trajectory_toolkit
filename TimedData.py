@@ -5,6 +5,7 @@ from __builtin__ import classmethod
 from termcolor import colored
 import math
 import Utils
+from Plotter import Plotter
 
 class TimedData:
     # Data numpy array
@@ -95,8 +96,7 @@ class TimedData:
     
     def length(self): #TESTED
         return (self.last + 1);
-    
-    # Math functions
+        
     def computeDerivativeOfColumn(self, dataID, derivativeID): #TESTED
         dp = np.diff(self.col(dataID))
         dt = np.diff(self.getTime())
@@ -144,31 +144,51 @@ class TimedData:
         while (counter < tdOut.end()):
             Quaternion.q_slerp()
         
-    def getTimeOffset(self,tdIn, tdInRorID, rorID=None):
+    def getTimeOffset(self,tdIn, colID, tdInColID=None):
         # Allow interpolating in to other columns / default is into same column
-        if rorID is None:
-            rorID = tdInRorID
+        if tdInColID is None:
+            tdInColID = colID
         # Make timing calculation
         dtIn = tdIn.getLastTime()-tdIn.getFirstTime()
         dt = self.getLastTime()-self.getFirstTime()
         timeIncrement = min(dt/(self.length()-1), dtIn/(tdIn.length()-1))
-        N = math.ceil(min(dt, dtIn)/timeIncrement)+1
+        N = math.ceil(dt/timeIncrement)+1
+        NIn = math.ceil(dtIn/timeIncrement)+1
         # Interpolate ROR of trajectories
-        td1 = TimedData(5);
-        td2 = TimedData(5);
-        td1.initEmptyFromTimes(self.getFirstTime()+np.arange(N)*timeIncrement)
-        td2.initEmptyFromTimes(tdIn.getFirstTime()+np.arange(N)*timeIncrement)
-        self.interpolateColumns(td1, range(rorID,rorID+3), range(1,4))
-        tdIn.interpolateColumns(td2, range(tdInRorID,tdInRorID+3), range(1,4))
-        # Calc norm of omega
-        td1.D()[:,4] = Utils.norm(td1.D()[:,1:4])
-        td2.D()[:,4] = Utils.norm(td2.D()[:,1:4])
+        td1 = TimedData(2);
+        td2 = TimedData(2);
+        td1.initEmptyFromTimes(self.getFirstTime()+np.arange(-(NIn-1),N+(NIn-1))*timeIncrement)
+        td2.initEmptyFromTimes(tdIn.getFirstTime()+np.arange(NIn)*timeIncrement)
+        self.interpolateColumn(td1, 1, colID)
+        tdIn.interpolateColumn(td2, 1, tdInColID)
         # Calc COnvolution
-        conv = np.convolve(td1.D()[:,4], td2.D()[:,4])
+        RMS = np.sqrt(np.mean(np.square(self.col(1))))
+        td1.setBlock(np.ones([NIn-1,1])*RMS,0,1)
+        td1.setBlock(np.ones([NIn-1,1])*RMS,N+(NIn-1),1)
+        
+        
+        
+        plotter = Plotter(3, [2,1], True)
+        plotter.addDataToSubplot(td1, 1, 1, 'g');
+        plotter.addDataToSubplot(td2, 1, 1, 'b');
+        
+        
+        
+        conv = np.correlate(td1.D()[:,1], td2.D()[:,1], 'valid')
         # Deviation of the maximum convolution from the middle of the convolution vector  
-        n = np.argmax(conv) - (math.ceil(np.shape(conv)[0]/2.0)-1)
+        n = np.argmax(conv) - NIn + 1
+        
+        
+        
+        td2.applyTimeOffset(timeIncrement*n + tdIn.getFirstTime() - self.getFirstTime())
+        plotter.addDataToSubplot(td1, 1, 2, 'g');
+        plotter.addDataToSubplot(td2, 1, 2, 'b');
+        
         return timeIncrement*n + tdIn.getFirstTime() - self.getFirstTime()
     
+    def applyTimeOffset(self,to):
+        self.setCol(self.col(0) + to,0)
+        
     @classmethod
     def basicTests(self):
         td1 = TimedData(4)

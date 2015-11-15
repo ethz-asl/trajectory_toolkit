@@ -31,6 +31,7 @@ class Plotter:
         self.axes.append(axis);
         self.lines.append(axis.plot([], [], c=color, label=legend)[0])
         plt.legend()
+        self.refresh()
 
     def refresh(self):
         figure(self.figureId)
@@ -50,4 +51,4 @@ class Plotter:
         # Refresh and show plot
         plt.ioff();            
         self.refresh();
-        plt.show();
+        plt.show(block=False);
