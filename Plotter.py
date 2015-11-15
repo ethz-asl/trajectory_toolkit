@@ -31,8 +31,15 @@ class Plotter:
         self.axes.append(axis);
         self.lines.append(axis.plot([], [], c=color, label=legend)[0])
         plt.legend()
-        self.refresh()
-
+        self.refreshSingleLine(len(self.colIDs)-1)
+    def refreshSingleLine(self,lineID):
+        figure(self.figureId)
+        stepSize = floor(self.td[lineID].end()/self.maxPoints)+1;
+        self.lines[lineID].set_xdata(self.td[lineID].col(0)[1::stepSize])
+        self.lines[lineID].set_ydata(self.td[lineID].col(self.colIDs[lineID])[1::stepSize])
+        self.axes[lineID].relim()
+        self.axes[lineID].autoscale_view(True,True,True)
+        plt.draw()
     def refresh(self):
         figure(self.figureId)
         for i in xrange(0,len(self.colIDs)):
@@ -45,7 +52,7 @@ class Plotter:
             axis.relim()
             axis.autoscale_view(True,True,True)
         # Redraw Plot
-        plt.draw();
+        plt.draw()
         
     def show(self):
         # Refresh and show plot
