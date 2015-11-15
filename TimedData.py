@@ -5,7 +5,6 @@ from __builtin__ import classmethod
 from termcolor import colored
 import math
 import Utils
-from Plotter import Plotter
 
 class TimedData:
     # Data numpy array
@@ -96,7 +95,8 @@ class TimedData:
     
     def length(self): #TESTED
         return (self.last + 1);
-        
+    
+    # Math functions
     def computeDerivativeOfColumn(self, dataID, derivativeID): #TESTED
         dp = np.diff(self.col(dataID))
         dt = np.diff(self.getTime())
@@ -145,7 +145,8 @@ class TimedData:
             Quaternion.q_slerp()
         
     def getTimeOffset(self,tdIn, colID, tdInColID=None):
-        # Allow interpolating in to other columns / default is into same column
+        paddingWithRMS = False
+        weightingWithOverlapLength = False
         if tdInColID is None:
             tdInColID = colID
         # Make timing calculation
@@ -154,37 +155,32 @@ class TimedData:
         timeIncrement = min(dt/(self.length()-1), dtIn/(tdIn.length()-1))
         N = math.ceil(dt/timeIncrement)+1
         NIn = math.ceil(dtIn/timeIncrement)+1
-        # Interpolate ROR of trajectories
+        # Interpolate of trajectories
         td1 = TimedData(2);
         td2 = TimedData(2);
-        td1.initEmptyFromTimes(self.getFirstTime()+np.arange(-(NIn-1),N+(NIn-1))*timeIncrement)
+        if paddingWithRMS:
+            td1.initEmptyFromTimes(self.getFirstTime()+np.arange(-(NIn-1),N+(NIn-1))*timeIncrement)
+        else:
+            td1.initEmptyFromTimes(self.getFirstTime()+np.arange(N)*timeIncrement)
         td2.initEmptyFromTimes(tdIn.getFirstTime()+np.arange(NIn)*timeIncrement)
         self.interpolateColumn(td1, 1, colID)
         tdIn.interpolateColumn(td2, 1, tdInColID)
+        # Padding with RMS
+        if paddingWithRMS:
+            RMS = np.sqrt(np.mean(np.square(self.col(1))))
+            td1.setBlock(np.ones([NIn-1,1])*RMS,0,1)
+            td1.setBlock(np.ones([NIn-1,1])*RMS,N+(NIn-1),1)        
         # Calc COnvolution
-        RMS = np.sqrt(np.mean(np.square(self.col(1))))
-        td1.setBlock(np.ones([NIn-1,1])*RMS,0,1)
-        td1.setBlock(np.ones([NIn-1,1])*RMS,N+(NIn-1),1)
-        
-        
-        
-        plotter = Plotter(3, [2,1], True)
-        plotter.addDataToSubplot(td1, 1, 1, 'g');
-        plotter.addDataToSubplot(td2, 1, 1, 'b');
-        
-        
-        
-        conv = np.correlate(td1.D()[:,1], td2.D()[:,1], 'valid')
+        if paddingWithRMS:
+            conv = np.correlate(td1.D()[:,1], td2.D()[:,1], 'valid')
+        else:
+            conv = np.correlate(td1.D()[:,1], td2.D()[:,1], 'full')
+        if weightingWithOverlapLength:
+            w = np.minimum(np.minimum(np.arange(1,N+NIn,1),np.ones(N+NIn-1)*NIn),np.arange(N+NIn-1,0,-1))
+            conv = conv / w
         # Deviation of the maximum convolution from the middle of the convolution vector  
         n = np.argmax(conv) - NIn + 1
-        
-        
-        
-        td2.applyTimeOffset(timeIncrement*n + tdIn.getFirstTime() - self.getFirstTime())
-        plotter.addDataToSubplot(td1, 1, 2, 'g');
-        plotter.addDataToSubplot(td2, 1, 2, 'b');
-        
-        return timeIncrement*n + tdIn.getFirstTime() - self.getFirstTime()
+        return timeIncrement*n + self.getFirstTime() - tdIn.getFirstTime()
     
     def applyTimeOffset(self,to):
         self.setCol(self.col(0) + to,0)

@@ -33,17 +33,20 @@ plotter2 = Plotter(2, [3,1], isLivePlotting)
 # Create a TimeData Object
 td1 = TimedData(3)
 td2 = TimedData(3)
-td1.initEmptyFromTimes(np.arange(0,10,0.01))
-td2.initEmptyFromTimes(np.arange(0,10,0.01))
+td1.initEmptyFromTimes(np.arange(0,100,0.01))
+td2.initEmptyFromTimes(np.arange(0,97,0.01))
 td1.setColumnToSine(1, 1, 0.1, 0)
-td2.setColumnToSine(1, 1, 0.1, np.pi/4)
+setTo = 0.2;
+frequency = 0.1;
+print(setTo)
+td2.setColumnToSine(1, 1, frequency, 2 * np.pi * frequency * setTo)
 td1.setCol(np.abs(td1.col(1)), 2)
 td2.setCol(np.abs(td2.col(1)), 2)
 plotter1.addDataToSubplot(td1, 2, 1, 'g');
 plotter1.addDataToSubplot(td2, 2, 1, 'b');
 to = td1.getTimeOffset(td2, 2)
 print(to)
-td1.applyTimeOffset(-to)
+td2.applyTimeOffset(to)
 plotter2.addDataToSubplot(td1, 2, 1, 'g');
 plotter2.addDataToSubplot(td2, 2, 1, 'b');
 # td1.basicTests();
