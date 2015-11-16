@@ -96,17 +96,16 @@ def q_boxMinus(q1,q2): #TESTED
 def q_slerp(q1,q2,t): #TESTED
     return q_boxPlus(q1, (t*q_boxMinus(q2, q1)))
 
-def q_getRPY(q): #UNTESTED
-    # TODO: find better solution?
+def q_mean(q):
     if q.ndim == 1:
-        rpy = np.zeros([3])
+        return q;
     else:
-        rpy = np.zeros([np.shape(q)[0],4])
-    rpy.T[0,] = np.arctan2(2*q.T[2,]*q.T[0,]-2*q.T[1,]*q.T[3,], 1 - 2*q.T[2,]*q.T[2,] - 2*q.T[3,]*q.T[3,]);
-    rpy.T[1,] = np.arctan2(2*q.T[1,]*q.T[0,]-2*q.T[2,]*q.T[3,], 1 - 2*q.T[1,]*q.T[1,] - 2*q.T[3,]*q.T[3,]);
-    rpy.T[2,] = np.arcsin(2*q.T[1,]*q.T[2,]+2*q.T[3,]*q.T[0,]);
-    return rpy
-
+        n = np.shape(q)[0]
+           
+        mean_v = (np.sum(q_boxMinus(q[1:n,],np.kron(np.ones([n-1,1]),q[0,])), axis=0)/n);
+        print(mean_v)
+        return q_boxPlus(q[0,], mean_v)
+        
 def tests():
     v1 = np.array([0.2, 0.2, 0.4])#,[0.2,0.4,0.1]])
     v2 = np.array([1, 0, 0])#,[0.2,0.4,1]])                

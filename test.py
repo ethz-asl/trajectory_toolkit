@@ -80,6 +80,12 @@ q = Quaternion.q_exp(np.array([0.1,0.2,0.32]))
 v = np.array([1.1,-0.2,0.4])
 td3.applyBodyTransform(1,4,v,q)
 
+# Transform inertial frame
+qI = Quaternion.q_exp(np.array([0.2,-0.2,-0.4]))
+vI = np.array([-0.1,0.5,0.1])
+td3.applyInertialTransform(1,4,vI,qI)
+
+
 plotter2.addDataToSubplot(td3, 15, 3, 'r');
 plotter2.addDataToSubplot(td3, 16, 3, 'g');
 plotter2.addDataToSubplot(td3, 17, 3, 'b');
@@ -92,13 +98,18 @@ plotter2.addDataToSubplot(td4, 17, 3, 'b');
 
 td3.computeRotationalRateFromAttitude(4,8);
 td4.computeRotationalRateFromAttitude(4,8);
+td3.computeVectorNDerivative([1,2,3],[12,13,14]);
+td4.computeVectorNDerivative([1,2,3],[12,13,14]);
 td3.computeVelocitiesInBodyFrameFromPostionInWorldFrame([1,2,3],[15,16,17],td3.cols([4,5,6,7]));
 td4.computeVelocitiesInBodyFrameFromPostionInWorldFrame([1,2,3],[15,16,17],td4.cols([4,5,6,7]));
 
 translation, rotation = td4.calibrateBodyTransform(15,8,td3,15,8)
-# translationI, rotationI = td4.calibrateInertialTransform(12,8,td3,12,8,[0,1,2,3,4], rotation, translation)
-# print(translationI)
-# print(rotationI)
+print(Quaternion.q_log(rotation))
+print(rotation)
+print(translation)
+translationI, rotationI = td4.calibrateInertialTransform(1,4,td3,1,4,[500], rotation, translation)
+print(translationI)
+print(Quaternion.q_log(rotationI))
 print(Quaternion.q_log(rotation))
 print(translation)
 # # Init node or load ros bag

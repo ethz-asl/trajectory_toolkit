@@ -141,49 +141,49 @@ class TimedData:
         for i in np.arange(0,3):
             self.d[1:self.end(),rotationalrateID+i] = np.divide(dv[:,i],dt);
         
-    def interpolateColumns(self, other, colIDs2, colIDs1=None): #TESTED
+    def interpolateColumns(self, other, colIDs, otherColIDs=None): #TESTED
         # Allow interpolating in to other columns / default is into same column
-        if colIDs1 is None:
-            colIDs1 = colIDs2
+        if otherColIDs is None:
+            otherColIDs = colIDs
         # ColIDs must match in size to be interpolated
-        if(len(colIDs2)==len(colIDs1)):
-            for i in xrange(0,len(colIDs2)):
-                self.interpolateColumn(other, colIDs1[i], colIDs2[i])
+        if(len(colIDs)==len(otherColIDs)):
+            for i in xrange(0,len(colIDs)):
+                self.interpolateColumn(other, colIDs[i], otherColIDs[i])
         else:
             print(colored('WARNING: Interpolation failed! ColIDs did not match in size.','yellow'))
 
-    def interpolateColumn(self, other, colID2, colID1=None): #TESTED
+    def interpolateColumn(self, other, colID, otherColID=None): #TESTED
         # NOTE: Values outside of the timerange of self are set to the first rsp. last value (no extrapolation)
         # Allow interpolating in to other columns / default is into same column
-        if colID1 is None:
-            colID1 = colID2
+        if otherColID is None:
+            otherColID = colID
         # When times are increasing interpolate using built in numpy interpolation
         if(np.all(np.diff(other.getTime()) > 0)):
-            other.setCol(np.interp(other.getTime(), self.getTime(), self.col(colID1)),colID2)
+            other.setCol(np.interp(other.getTime(), self.getTime(), self.col(colID)),otherColID)
         else:
             print(colored('WARNING: Interpolation failed! Time values must be increasing.','yellow'))
     
-    def interpolateQuaternion(self, tdOut, tdOutColID, colID):
+    def interpolateQuaternion(self, other, colID, otherColID=None):
         # All quaternions before self start are set to the first entry
+        if otherColID is None:
+            otherColID = colID
         counterOut = 0;
         counter = 0;
-        print(self.D())
-        while tdOut.getTime()[counterOut] <= self.getTime()[counter]:
-            print('Here')
-            tdOut.d[counterOut,tdOutColID:tdOutColID+4] = self.d[counter,colID:colID+4]
+        while other.getTime()[counterOut] <= self.getTime()[counter]:
+            other.d[counterOut,otherColID:otherColID+4] = self.d[counter,colID:colID+4]
             counterOut += 1
             
         # Interpolation
-        while(counterOut < tdOut.length()):
-            while(self.getTime()[counter] < tdOut.getTime()[counterOut] and counter < self.last):
+        while(counterOut < other.length()):
+            while(self.getTime()[counter] < other.getTime()[counterOut] and counter < self.last):
                 counter += 1
             counter
             if (counter != self.last):
-                d = (tdOut.getTime()[counterOut]-self.getTime()[counter-1])/(self.getTime()[counter]-self.getTime()[counter-1]);
-                tdOut.d[counterOut,tdOutColID:tdOutColID+4] = Quaternion.q_slerp(self.d[counter-1,colID:colID+4], self.d[counter,colID:colID+4], d)   
+                d = (other.getTime()[counterOut]-self.getTime()[counter-1])/(self.getTime()[counter]-self.getTime()[counter-1]);
+                other.d[counterOut,otherColID:otherColID+4] = Quaternion.q_slerp(self.d[counter-1,colID:colID+4], self.d[counter,colID:colID+4], d)   
             else:
                 # Set quaternion equal to last quaternion constant extrapolation
-                tdOut.d[counterOut,tdOutColID:tdOutColID+4] = self.d[counter,colID:colID+4];
+                other.d[counterOut,otherColID:otherColID+4] = self.d[counter,colID:colID+4];
             counterOut +=1
         
     def getTimeOffset(self,other, colID1, colID2=None):
@@ -205,8 +205,8 @@ class TimedData:
         else:
             td1.initEmptyFromTimes(self.getFirstTime()+np.arange(N)*timeIncrement)
         td2.initEmptyFromTimes(other.getFirstTime()+np.arange(NIn)*timeIncrement)
-        self.interpolateColumn(td1, 1, colID1)
-        other.interpolateColumn(td2, 1, colID2)
+        self.interpolateColumn(td1, colID1, 1)
+        other.interpolateColumn(td2, colID2, 1)
         # Padding with RMS
         if paddingWithRMS:
             RMS = np.sqrt(np.mean(np.square(self.col(1))))
@@ -300,22 +300,31 @@ class TimedData:
         dt1 = self.getLastTime()-self.getFirstTime()
         dt2 = other.getLastTime()-other.getFirstTime()
         first = max(self.getFirstTime(),other.getFirstTime())
+        last = min(self.getLastTime(),other.getLastTime())
         timeIncrement = min(dt1/(self.length()-1), dt2/(other.length()-1))
-        
-        # Interpolate 2 entries (min Size, we only need the first entry
         td1 = TimedData(8);
         td2 = TimedData(8);
-        ids = first+np.array(calIDs)*timeIncrement;
-        print(ids)
-        td1.initEmptyFromTimes(ids)
-        td2.initEmptyFromTimes(ids)
+        calTimes = np.array(calIDs)*timeIncrement + first
+        td1.initEmptyFromTimes(calTimes)
+        td2.initEmptyFromTimes(calTimes)
         self.interpolateColumns(td1, [posID1+0,posID1+1,posID1+2], [1,2,3])
         other.interpolateColumns(td2, [posID2+0,posID2+1,posID2+2], [1,2,3])
         self.interpolateQuaternion(td1, attID1, 4)
         other.interpolateQuaternion(td2, attID2, 4)
         
-        rotation = Quaternion.q_mult(Quaternion.q_mult(Quaternion.inverted(td2.D[0,4:8]),q_CB),td1.D[0,4:8]);
-        translation = td1.D[0,1:4]+Quaternion.rotate(Quaternion.inverse(td1.D[0,4:8]),B_r_BC)-Quaternion.rotate(Quaternion.inverse(rotation),td2.D[0,1:4])
+        newIDs = np.arange(0,len(calIDs))
+        
+        q_CB_vec = np.kron(np.ones([len(calIDs),1]),q_CB)
+        q_JC_vec = Quaternion.q_inverse(td2.D()[newIDs,4:8])
+        q_BI_vec = td1.D()[newIDs,4:8]
+        B_r_BC_vec = np.kron(np.ones([len(calIDs),1]),B_r_BC)
+        J_r_JC = td2.D()[newIDs,1:4];
+        J_r_BC = Quaternion.q_rotate(Quaternion.q_mult(q_JC_vec,q_CB_vec), B_r_BC_vec)
+        J_r_IB = Quaternion.q_rotate(Quaternion.q_mult(q_JC_vec,Quaternion.q_mult(q_CB_vec,q_BI_vec)),td1.D()[newIDs,1:4])
+
+        rotation = Quaternion.q_inverse(Quaternion.q_mult(Quaternion.q_mult(q_JC_vec,q_CB_vec),q_BI_vec));
+        translation = J_r_JC-J_r_BC-J_r_IB
+        
         
         return translation, rotation
     
