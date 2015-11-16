@@ -36,10 +36,10 @@ td2 = TimedData(3)
 td1.initEmptyFromTimes(np.arange(0,100,0.01))
 td2.initEmptyFromTimes(np.arange(0,97,0.01))
 td1.setColumnToSine(1, 1, 0.1, 0)
-setTo = 0.2;
+to = 0.2;
 frequency = 0.1;
-print(setTo)
-td2.setColumnToSine(1, 1, frequency, 2 * np.pi * frequency * setTo)
+print(to)
+td2.setColumnToSine(1, 1, frequency, 2 * np.pi * frequency * to)
 td1.setCol(np.abs(td1.col(1)), 2)
 td2.setCol(np.abs(td2.col(1)), 2)
 plotter1.addDataToSubplot(td1, 2, 1, 'g');
@@ -47,10 +47,56 @@ plotter1.addDataToSubplot(td2, 2, 1, 'b');
 to = td1.getTimeOffset(td2, 2)
 print(to)
 td2.applyTimeOffset(to)
-plotter2.addDataToSubplot(td1, 2, 1, 'g');
-plotter2.addDataToSubplot(td2, 2, 1, 'b');
+plotter1.addDataToSubplot(td1, 2, 2, 'g');
+plotter1.addDataToSubplot(td2, 2, 2, 'b');
 # td1.basicTests();
+# td1.advancedTests();
 # Quaternion.tests();
+
+
+td3 = TimedData(15)
+td4 = TimedData(15)
+rbLoader = RosbagStampedTopicLoader('/home/michael/catkin_ws/result31.bag', '/rovio/transform');
+rbLoader.loadTransformStamped(td3,1,4);
+rbLoader = RosbagStampedTopicLoader('/home/michael/catkin_ws/result31.bag', '/rovio/transform');
+rbLoader.loadTransformStamped(td4,1,4);
+td3.computeRotationalRateFromAttitude(4,8);
+td4.computeRotationalRateFromAttitude(4,8);
+td3.computeNormOfColumns([8,9,10],11);
+td4.computeNormOfColumns([8,9,10],11);
+td3.computeVectorNDerivative(1,12,3);
+td4.computeVectorNDerivative(1,12,3);
+to = 2.7;
+print(to)
+td4.applyTimeOffset(-to)
+plotter2.addDataToSubplot(td3, 11, 1, 'g');
+plotter2.addDataToSubplot(td4, 11, 1, 'b');
+to = td3.getTimeOffset(td4, 2)
+print(to)
+td4.applyTimeOffset(to)
+plotter2.addDataToSubplot(td3, 11, 2, 'g');
+plotter2.addDataToSubplot(td4, 11, 2, 'b');
+
+
+
+q = Quaternion.q_exp(np.array([0.1,0.2,0.32]))
+print(q)
+v = np.array([1.1,-0.2,0.4])
+td3.applyBodyTransform(1,4,v,q)
+plotter2.addDataToSubplot(td3, 1, 3, 'r');
+plotter2.addDataToSubplot(td3, 2, 3, 'g');
+plotter2.addDataToSubplot(td3, 3, 3, 'b');
+# td4.invertTransform(1,4)
+# td4.applyInertialTransform(1,4,-Quaternion.q_rotate(q,v),Quaternion.q_inverse(q))
+# td4.invertTransform(1,4)
+plotter2.addDataToSubplot(td4, 1, 3, 'r');
+plotter2.addDataToSubplot(td4, 2, 3, 'g');
+plotter2.addDataToSubplot(td4, 3, 3, 'b');
+
+td3.computeRotationalRateFromAttitude(4,8);
+td4.computeRotationalRateFromAttitude(4,8);
+translation, rotation = td4.calibrateBodyTransform(12,8,td3,12,8)
+print(rotation)
  
 # # Init node or load ros bag
 # if hasRosSubscriber:
@@ -80,4 +126,4 @@ plotter2.addDataToSubplot(td2, 2, 1, 'b');
 # # Plotting
 # plotter1.show();
 
-input("Press Enter to continue...")
+raw_input("Press Enter to continue...")

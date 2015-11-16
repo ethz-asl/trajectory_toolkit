@@ -30,7 +30,8 @@ class Plotter:
         axis = subplot(self.subplotDim[0], self.subplotDim[1], plotID)
         self.axes.append(axis);
         self.lines.append(axis.plot([], [], c=color, label=legend)[0])
-        plt.legend()
+        if legend != '':
+            plt.legend()
         self.refreshSingleLine(len(self.colIDs)-1)
     def refreshSingleLine(self,lineID):
         figure(self.figureId)
