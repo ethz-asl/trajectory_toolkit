@@ -9,7 +9,7 @@ def addTransformStamped(td, msg, translationID, rotationID):
     td.append();
     td.d[td.last, td.timeID] = msg.header.stamp.to_sec();
     td.d[td.last, translationID:translationID+3] = np.array([msg.transform.translation.x,msg.transform.translation.y,msg.transform.translation.z]);
-    td.d[td.last, rotationID:rotationID+4] = np.array([msg.transform.rotation.x,msg.transform.rotation.y,msg.transform.rotation.z,msg.transform.rotation.w]);
+    td.d[td.last, rotationID:rotationID+4] = np.array([msg.transform.rotation.w,msg.transform.rotation.x,msg.transform.rotation.y,msg.transform.rotation.z]);
 
 # Listener on a Trans
 class TransformStampedListener:
