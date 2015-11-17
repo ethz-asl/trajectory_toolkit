@@ -343,3 +343,13 @@ class TimedData:
         rotation = Quaternion.q_mean(Quaternion.q_inverse(Quaternion.q_mult(Quaternion.q_mult(q_JC_vec,q_CB_vec),q_BI_vec)))
         translation = np.mean(J_r_JC-J_r_BC-J_r_IB, axis=0)
         return translation.flatten(), rotation.flatten()
+    
+    def computeSigmaBounds(self, dataID, covID, plusID, minusID, factor):
+        if(type(dataID) is int):
+            dataID = [dataID]
+            covID = [covID]
+            plusID = [plusID]
+            minusID = [minusID]
+        for i in xrange(0,len(dataID)):
+            self.setCol(self.col(dataID[i])+factor*self.col(covID[i])**(1./2),plusID[i])
+            self.setCol(self.col(dataID[i])-factor*self.col(covID[i])**(1./2),minusID[i])
