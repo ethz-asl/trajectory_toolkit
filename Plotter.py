@@ -11,11 +11,13 @@ class Plotter:
     subplotDim = [1,1]
     figureId = 0
     maxPoints = 1000;
+    isLive = False
     
     def __init__(self, figureId, subplotDim, isLive=False, maxPoints=1000):
         self.figureId = figureId
         self.maxPoints = maxPoints
         self.subplotDim = subplotDim
+        self.isLive = isLive
         # Open Plot when live plotting
         if isLive:
             figure(self.figureId)
@@ -58,6 +60,10 @@ class Plotter:
         plt.draw()
         
     def show(self):
+        figure(self.figureId)
         # show plot
-        plt.ioff();            
+        if self.isLive:
+            self.refresh(); 
+            plt.ioff();
+             
         plt.show(block=False);

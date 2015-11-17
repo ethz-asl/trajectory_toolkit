@@ -322,8 +322,7 @@ class TimedData:
         J_r_JC = td2.D()[newIDs,1:4];
         J_r_BC = Quaternion.q_rotate(Quaternion.q_mult(q_JC_vec,q_CB_vec), B_r_BC_vec)
         J_r_IB = Quaternion.q_rotate(Quaternion.q_mult(q_JC_vec,Quaternion.q_mult(q_CB_vec,q_BI_vec)),td1.D()[newIDs,1:4])
-
-        rotation = Quaternion.q_inverse(Quaternion.q_mult(Quaternion.q_mult(q_JC_vec,q_CB_vec),q_BI_vec));
-        translation = J_r_JC-J_r_BC-J_r_IB
         
+        rotation = Quaternion.q_inverse(Quaternion.q_mult(Quaternion.q_mult(q_JC_vec,q_CB_vec),q_BI_vec));
+        translation = np.mean(J_r_JC-J_r_BC-J_r_IB, axis=0)
         return translation.flatten(), rotation.flatten()

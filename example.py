@@ -10,9 +10,19 @@ from termcolor import colored
 outputColor = 'blue'
 
 """
- Set isNode to true to run as a node here.
+ 	README:
+ 		This script provides an overview of the different functionalities of the trajectory_toolkit.
+ 		Two main examples are shown:
+ 			1. 	A bagfile is loaded into two TimedData structures. The second TimedData is transformed,
+ 				we transform the body frame as well as the inertial frame, additionally a time delay is introduced.
+ 				We then try to align the first TimedData to the altered TimedData.
+ 				The results are plotted. In a first subplot one can observe the inputs, which are identical.
+ 				The second subplot shows the altered second TimedData compared to the input.
+ 				And the third plot shows the aligned first TimedData compared with the altered second TimedData.
+ 			2. 	A second functionality is live plotting. This is illustrated by simply plotting the entries of a
+ 				TransformStamped message. Set isNode to true for that feature.
 """
-isNode = False;
+isNode = True;
 
 if isNode is not True:
 	from RosDataAcquisition import RosbagStampedTopicLoader
@@ -195,3 +205,4 @@ else:
 	livePlotter.show();
 
 raw_input("Press Enter to continue...")
+

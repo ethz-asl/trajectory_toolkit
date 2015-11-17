@@ -102,5 +102,4 @@ def q_mean(q):
     else:
         n = np.shape(q)[0]
         mean_v = (np.sum(q_boxMinus(q[1:n,],np.kron(np.ones([n-1,1]),q[0,])), axis=0)/n);
-        print(mean_v)
         return q_boxPlus(q[0,], mean_v)
