@@ -22,7 +22,7 @@ outputColor = 'blue'
  			2. 	A second functionality is live plotting. This is illustrated by simply plotting the entries of a
  				TransformStamped message. Set isNode to true for that feature.
 """
-isNode = True;
+isNode = False;
 
 if isNode is not True:
 	from RosDataAcquisition import RosbagStampedTopicLoader
@@ -142,7 +142,7 @@ if isNode is not True:
 	"""
 		The calibration of the Intertial Transform needs the velocity and the rotational rate start IDs and the estimated body transform.
 	"""
-	J_r_JI_est, qIJ_est = td1.calibrateInertialTransform(posIDs1[0], attIDs1[0], td2, posIDs2[0], attIDs2[0], B_r_BC_est, qCB_est)
+	J_r_JI_est, qIJ_est = td1.calibrateInertialTransform(posIDs1[0], attIDs1[0], td2, posIDs2[0], attIDs2[0], B_r_BC_est, qCB_est, [0,1,2])
 	vIJ_est = Quaternion.q_log(qIJ_est);
 	vIJ_err = vIJ-vIJ_est;
 	J_r_JI_err = J_r_JI - J_r_JI_est;
