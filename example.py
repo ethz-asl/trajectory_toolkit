@@ -6,8 +6,6 @@ from Plotter import Plotter
 import numpy as np
 import Quaternion
 import Utils
-from termcolor import colored
-outputColor = 'blue'
 
 """
  	README:
@@ -75,7 +73,7 @@ if isNode is not True:
 	qCB = Quaternion.q_exp(vCB)
 	B_r_BC = np.array([1.1,-0.2,0.4])
 	td2.applyBodyTransform(posIDs2[0], attIDs2[0], B_r_BC, qCB)
-	print(colored('Applying Body Transform:', outputColor))
+	print('Applying Body Transform:')
 	print('Rotation Vector ln(qCB):\tvx:' + str(vCB[0]) + '\tvy:' + str(vCB[1]) + '\tvz:' + str(vCB[2]))
 	print('Translation Vector B_r_BC:\trx:' + str(B_r_BC[0]) + '\try:' + str(B_r_BC[1]) + '\trz:' + str(B_r_BC[2]))
 	
@@ -86,7 +84,7 @@ if isNode is not True:
 	qIJ = Quaternion.q_exp(vIJ)
 	J_r_JI = np.array([-0.1,0.5,0.1])
 	td2.applyInertialTransform(posIDs2[0], attIDs2[0],J_r_JI,qIJ)
-	print(colored('Applying Inertial Transform:', outputColor))
+	print('Applying Inertial Transform:')
 	print('Rotation Vector ln(qIJ):\tvx:' + str(vIJ[0]) + '\tvy:' + str(vIJ[1]) + '\tvz:' + str(vIJ[2]))
 	print('Translation Vector J_r_JI:\trx:' + str(J_r_JI[0]) + '\try:' + str(J_r_JI[1]) + '\trz:' + str(J_r_JI[2]))
 	
@@ -95,7 +93,7 @@ if isNode is not True:
 	"""
 	timeOffset = 0.2;
 	td2.applyTimeOffset(timeOffset)
-	print(colored('Applying Time Offset:', outputColor))
+	print('Applying Time Offset:')
 	print('Time Offset: ' + str(timeOffset) + 's')
 	
 	# Add transformed x to plot
@@ -133,7 +131,7 @@ if isNode is not True:
 	vCB_est = Quaternion.q_log(qCB_est)
 	vCB_err = vCB-vCB_est
 	B_r_BC_err = B_r_BC - B_r_BC_est
-	print(colored('Calibrate Body Transform:', outputColor))
+	print('Calibrate Body Transform:')
 	print('Rotation Vector ln(qCB_est):\tvx:' + str(vCB_est[0]) + '\tvy:' + str(vCB_est[1]) + '\tvz:' + str(vCB_est[2]))
 	print('Translation Vector B_r_BC_est:\trx:' + str(B_r_BC_est[0]) + '\try:' + str(B_r_BC_est[1]) + '\trz:' + str(B_r_BC_est[2]))
 	print('Rotation Error ln(qCB_err):\tvx:' + str(vCB_err[0]) + '\tvy:' + str(vCB_err[1]) + '\tvz:' + str(vCB_err[2]))
@@ -146,7 +144,7 @@ if isNode is not True:
 	vIJ_est = Quaternion.q_log(qIJ_est);
 	vIJ_err = vIJ-vIJ_est;
 	J_r_JI_err = J_r_JI - J_r_JI_est;
-	print(colored('Calibrate Inertial Transform:', outputColor))
+	print('Calibrate Inertial Transform:')
 	print('Rotation Vector ln(qIJ_est):\tvx:' + str(vIJ_est[0]) + '\tvy:' + str(vIJ_est[1]) + '\tvz:' + str(vIJ_est[2]))
 	print('Translation Vector J_r_JI_est:\trx:' + str(J_r_JI_est[0]) + '\try:' + str(J_r_JI_est[1]) + '\trz:' + str(J_r_JI_est[2]))
 	print('Rotation Error ln(qIJ_err):\tvx:' + str(vIJ_err[0]) + '\tvy:' + str(vIJ_err[1]) + '\tvz:' + str(vIJ_err[2]))
@@ -159,7 +157,6 @@ if isNode is not True:
 
 	plotter1.addDataToSubplot(td1, posIDs1[0], 3, 'r', 'td1Cal x');
 	plotter1.addDataToSubplot(td2, posIDs2[0], 3, 'b', 'td2Trans x');
-	plotter1.show()
 
 else:
 	import rospy
@@ -183,7 +180,7 @@ else:
 	"""
 		Initialize the plotter as a live plot. Limit the maximal number of displayed points to 300.
 	"""
-	livePlotter = Plotter(1, [4,2], True, 300)
+	livePlotter = Plotter(1, [4,2], 300)
 	livePlotter.addDataToSubplot(td3, 1, 1, 'r', 'rx');
 	livePlotter.addDataToSubplot(td3, 2, 3, 'g', 'ry');
 	livePlotter.addDataToSubplot(td3, 3, 5, 'b', 'rz');
@@ -198,11 +195,6 @@ else:
 	while not rospy.is_shutdown():
 	 	livePlotter.refresh()
 	 	rate.sleep()
-
-	"""
-		Show plot at the end.
-	"""
-	livePlotter.show();
 
 raw_input("Press Enter to continue...")
 

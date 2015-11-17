@@ -83,7 +83,7 @@ def q_exp(v): #TESTED
     else:
         q = np.zeros([np.shape(v)[0],4])
     theta = Utils.norm(v);
-    q.T[1:4,] = (np.sin(theta*0.5) / theta*v.T)
+    q.T[1:4,] = (np.sin(theta*0.5) / np.maximum(theta,1e-6)*v.T)
     q.T[0,] = np.cos(theta*0.5).T
     return q
 

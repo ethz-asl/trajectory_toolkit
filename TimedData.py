@@ -2,7 +2,6 @@ import numpy as np
 import Quaternion
 import time
 from __builtin__ import classmethod
-from termcolor import colored
 import math
 import Utils
 
@@ -25,6 +24,11 @@ class TimedData:
         self.d = np.zeros([np.shape(times)[0], self.Nc])
         self.d[:self.end(),self.timeID] = times;
     
+    def cropTimes(self, t0, t1):
+        indices, = np.nonzero(np.logical_and(self.getTime() >= t0,self.getTime() <= t1))
+        self.d = np.take(self.D(), indices, axis=0)
+        self.last = np.size(indices)-1
+    
     def setColumnToSine(self, colID, amplitude, frequency, phaseShift):
         self.setCol(amplitude * np.sin(2 * np.pi * frequency * self.getTime() + phaseShift), colID)
     
@@ -33,36 +37,36 @@ class TimedData:
             if(colID < self.Nc):
                 self.d[:self.end(),colID] = data;
             else:
-                print(colored('WARNING: Did not set column! No column with that ID!','yellow'))
+                print('WARNING: Did not set column! No column with that ID!')
         else:
-            print(colored('WARNING: Did not set column! Wrong data size!','yellow'));
+            print('WARNING: Did not set column! Wrong data size!');
     
     def setCols(self, data, colIDs): #TESTED
         if(np.shape(data)[0] == self.end()):
             if(np.all(colIDs) < self.Nc):
                 self.d[:self.end(),colIDs] = data;
             else:
-                print(colored('WARNING: Did not set columns! No column with that ID!','yellow'))
+                print('WARNING: Did not set columns! No column with that ID!')
         else:
-            print(colored('WARNING: Did not set columns! Wrong data size!','yellow'));
+            print('WARNING: Did not set columns! Wrong data size!');
     
     def setRow(self, data, rowID): #TESTED
         if(np.shape(data)[0] == self.Nc):
             if(rowID < self.end()):
                 self.d[rowID,:] = data;
             else:
-                print(colored('WARNING: Did not set row! No row with that ID!','yellow'))
+                print('WARNING: Did not set row! No row with that ID!')
         else:
-            print(colored('WARNING: Did not set row! Wrong data size!','yellow'));
+            print('WARNING: Did not set row! Wrong data size!');
             
     def setBlock(self, data, rowID, colID):
         if(np.shape(data)[0] <= (self.end()-rowID) ):
             if(np.shape(data)[1] <= (self.Nc-colID) ): 
                 self.d[rowID:rowID+np.shape(data)[0],colID:colID+np.shape(data)[1]] = data;
             else:
-                print(colored('WARNING: Did not set block! Columns exceed matrix size!','yellow'))
+                print('WARNING: Did not set block! Columns exceed matrix size!')
         else:
-            print(colored('WARNING: Did not set block! Rows exceed matrix size!','yellow'));
+            print('WARNING: Did not set block! Rows exceed matrix size!');
     
     # These getter are used to access the "meaningful" data
     def D(self): #TESTED
@@ -71,7 +75,7 @@ class TimedData:
     def col(self, colID): #TESTED
         # Check colID validity
         if (colID > (np.shape(self.d)[1]-1) ):
-            print(colored('WARNING: You requested an invalid colID = '+str(colID) + '. Returning Zeros!','yellow'));
+            print('WARNING: You requested an invalid colID = '+str(colID) + '. Returning Zeros!');
             return np.zeros([self.end()]); 
         # Return data
         return self.d[0:self.end(), colID];
@@ -79,7 +83,7 @@ class TimedData:
     def cols(self, colIDs): #TESTED
         # Check colIDs validity
         if (max(colIDs) > (np.shape(self.d)[1]-1) ):
-            print(colored('WARNING: You requested an invalid colIDs = '+str(colIDs) + '. Returning Zeros!','yellow'));
+            print('WARNING: You requested an invalid colIDs = '+str(colIDs) + '. Returning Zeros!');
             return np.zeros([self.end()]); 
         # Return data
         return self.d[0:self.end(), colIDs];
@@ -87,7 +91,7 @@ class TimedData:
     def row(self, rowID): #TESTED
         # Check rowID validity
         if(rowID > self.last):
-            print(colored('WARNING: You requested an invalid rowID = '+str(rowID) + '. Returning Zeros!','yellow'));
+            print('WARNING: You requested an invalid rowID = '+str(rowID) + '. Returning Zeros!');
             return np.zeros([self.Nc]); 
         # Return data
         return self.d[rowID,:];     
@@ -117,32 +121,35 @@ class TimedData:
     def computeNormOfColumns(self, colID, normID):
         self.setCol(Utils.norm(self.cols(colID)), normID)
         
-    def computeDerivativeOfColumn(self, dataID, derivativeID): #TESTED
-        dp = np.diff(self.col(dataID))
-        dt = np.diff(self.getTime())
-        self.d[0,derivativeID] = 0.0;
-        self.d[1:self.end(),derivativeID] = np.divide(dp,dt);
+    def computeDerivativeOfColumn(self, dataID, derivativeID, a=1, b=0): #TESTED
+        dp = self.col(dataID)[a+b:self.end()]-self.col(dataID)[0:self.end()-(a+b)]
+        dt = self.getTime()[a+b:self.end()]-self.getTime()[0:self.end()-(a+b)]
+        self.d[0:a,derivativeID].fill(0)
+        self.d[self.end()-b:self.end(),derivativeID].fill(0)
+        self.d[a:self.end()-b,derivativeID] = np.divide(dp,dt);
 
-    def computeVectorNDerivative(self, inputIDs, outputIDs): #TESTED
+    def computeVectorNDerivative(self, inputIDs, outputIDs, a=1, b=0): #TESTED
         if(len(inputIDs)==len(outputIDs)):
-            dt = np.diff(self.getTime())
+            dt = self.getTime()[a+b:self.end()]-self.getTime()[0:self.end()-(a+b)]
             for i in xrange(0,len(inputIDs)):
-                dp = np.diff(self.col(inputIDs[i]))
-                self.d[0,outputIDs[i]] = 0.0;
-                self.d[1:self.end(),outputIDs[i]] = np.divide(dp,dt);
+                dp = self.col(inputIDs[i])[a+b:self.end()]-self.col(inputIDs[i])[0:self.end()-(a+b)]
+                self.d[0:a,outputIDs[i]].fill(0)
+                self.d[self.end()-b:self.end(),outputIDs[i]].fill(0)
+                self.d[a:self.end()-b,outputIDs[i]] = np.divide(dp,dt);
         else:
-            print(colored('WARNING: Compute N derivative failed! ColIDs did not match in size.','yellow'))
+            print('WARNING: Compute N derivative failed! ColIDs did not match in size.')
     
-    def computeVelocitiesInBodyFrameFromPostionInWorldFrame(self, posIDs, outputIDs, qIDs):
-        self.computeVectorNDerivative(posIDs, outputIDs)
+    def computeVelocitiesInBodyFrameFromPostionInWorldFrame(self, posIDs, outputIDs, qIDs, a=1, b=0):
+        self.computeVectorNDerivative(posIDs, outputIDs, a, b)
         self.setCols(Quaternion.q_rotate(self.cols(qIDs), self.cols(outputIDs)),outputIDs);
     
-    def computeRotationalRateFromAttitude(self, attitudeID, rotationalrateID):
-        dv = Quaternion.q_boxMinus(self.d[1:self.end(),attitudeID:attitudeID+4],self.d[0:self.last,attitudeID:attitudeID+4])
-        dt = np.diff(self.getTime())
+    def computeRotationalRateFromAttitude(self, attitudeID, rotationalrateID, a=1, b=0):
+        dv = Quaternion.q_boxMinus(self.d[a+b:self.end(),attitudeID:attitudeID+4],self.d[0:self.end()-(a+b),attitudeID:attitudeID+4])
+        dt = self.getTime()[a+b:self.end()]-self.getTime()[0:self.end()-(a+b)]
         for i in np.arange(0,3):
-            self.d[0,rotationalrateID+i] = 0.0;
-            self.d[1:self.end(),rotationalrateID+i] = np.divide(dv[:,i],dt);
+            self.d[0:a,rotationalrateID+i].fill(0)
+            self.d[self.end()-b:self.end(),rotationalrateID+i].fill(0)
+            self.d[a:self.end()-b,rotationalrateID+i] = np.divide(dv[:,i],dt);
         
     def interpolateColumns(self, other, colIDs, otherColIDs=None): #TESTED
         # Allow interpolating in to other columns / default is into same column
@@ -153,7 +160,7 @@ class TimedData:
             for i in xrange(0,len(colIDs)):
                 self.interpolateColumn(other, colIDs[i], otherColIDs[i])
         else:
-            print(colored('WARNING: Interpolation failed! ColIDs did not match in size.','yellow'))
+            print('WARNING: Interpolation failed! ColIDs did not match in size.')
 
     def interpolateColumn(self, other, colID, otherColID=None): #TESTED
         # NOTE: Values outside of the timerange of self are set to the first rsp. last value (no extrapolation)
@@ -164,7 +171,7 @@ class TimedData:
         if(np.all(np.diff(other.getTime()) > 0)):
             other.setCol(np.interp(other.getTime(), self.getTime(), self.col(colID)),otherColID)
         else:
-            print(colored('WARNING: Interpolation failed! Time values must be increasing.','yellow'))
+            print('WARNING: Interpolation failed! Time values must be increasing.')
     
     def interpolateQuaternion(self, other, colID, otherColID=None):
         # All quaternions before self start are set to the first entry
@@ -230,38 +237,48 @@ class TimedData:
     def applyTimeOffset(self,to):
         self.setCol(self.col(0) + to,0)
         
-    def applyBodyTransform(self, translationID, rotationID, translation, rotation):
-        newTranslation = self.cols(np.arange(translationID,translationID+3)) \
-                         + Quaternion.q_rotate(Quaternion.q_inverse(self.cols(np.arange(rotationID,rotationID+4))),
+    def applyBodyTransform(self, posID, attID, translation, rotation):
+        newTranslation = self.cols(np.arange(posID,posID+3)) \
+                         + Quaternion.q_rotate(Quaternion.q_inverse(self.cols(np.arange(attID,attID+4))),
                                                np.kron(np.ones([self.length(),1]),translation))
         newRotation = Quaternion.q_mult(np.kron(np.ones([self.length(),1]),rotation),
-                                        self.cols(np.arange(rotationID,rotationID+4)))
+                                        self.cols(np.arange(attID,attID+4)))
         for i in np.arange(0,3):
-            self.setCol(newTranslation[:,i],translationID+i)
+            self.setCol(newTranslation[:,i],posID+i)
         for i in np.arange(0,4):
-            self.setCol(newRotation[:,i],rotationID+i)
+            self.setCol(newRotation[:,i],attID+i)
+    
+    def applyBodyTransformToTwist(self, velID, rorID, translation, rotation):
+        newVel = Quaternion.q_rotate(np.kron(np.ones([self.length(),1]),rotation),
+                                     self.cols(np.arange(velID,velID+3)) \
+                                     + np.cross(self.cols(np.arange(rorID,rorID+3)),np.kron(np.ones([self.length(),1]),translation)))
+        newRor = Quaternion.q_rotate(np.kron(np.ones([self.length(),1]),rotation),
+                                     self.cols(np.arange(rorID,rorID+3)))
+        for i in np.arange(0,3):
+            self.setCol(newVel[:,i],velID+i)
+            self.setCol(newRor[:,i],rorID+i)
         
-    def applyInertialTransform(self, translationID, rotationID, translation, rotation):
+    def applyInertialTransform(self, posID, attID, translation, rotation):
         newTranslation = np.kron(np.ones([self.length(),1]),translation) \
                          + Quaternion.q_rotate(np.kron(np.ones([self.length(),1]),Quaternion.q_inverse(rotation)),
-                                               self.cols(np.arange(translationID,translationID+3)))
-        newRotation = Quaternion.q_mult(self.cols(np.arange(rotationID,rotationID+4)),
+                                               self.cols(np.arange(posID,posID+3)))
+        newRotation = Quaternion.q_mult(self.cols(np.arange(attID,attID+4)),
                                         np.kron(np.ones([self.length(),1]),rotation))
         for i in np.arange(0,3):
-            self.setCol(newTranslation[:,i],translationID+i)
+            self.setCol(newTranslation[:,i],posID+i)
         for i in np.arange(0,4):
-            self.setCol(newRotation[:,i],rotationID+i)
+            self.setCol(newRotation[:,i],attID+i)
         
-    def invertRotation(self, rotationID):
-        newRotation = Quaternion.q_inverse(self.cols(np.arange(rotationID,rotationID+4)))
+    def invertRotation(self, attID):
+        newRotation = Quaternion.q_inverse(self.cols(np.arange(attID,attID+4)))
         for i in np.arange(0,4):
-            self.setCol(newRotation[:,i],rotationID+i)
+            self.setCol(newRotation[:,i],attID+i)
         
-    def invertTransform(self, translationID, rotationID):
-        newTranslation = -Quaternion.q_rotate(self.cols(np.arange(rotationID,rotationID+4)),self.cols(np.arange(translationID,translationID+3)))
+    def invertTransform(self, posID, attID):
+        newTranslation = -Quaternion.q_rotate(self.cols(np.arange(attID,attID+4)),self.cols(np.arange(posID,posID+3)))
         for i in np.arange(0,3):
-            self.setCol(newTranslation[:,i],translationID+i)
-        self.invertRotation(rotationID)
+            self.setCol(newTranslation[:,i],posID+i)
+        self.invertRotation(attID)
     
     def calibrateBodyTransform(self, velID1, rorID1, other, velID2, rorID2):
         # Make timing calculation
