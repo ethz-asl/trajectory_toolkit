@@ -20,19 +20,19 @@ class Plotter:
         plt.ion()            
         plt.show(block=False);
     
-    def addDataToSubplot(self, td, colID, plotID, color, legend=''):
+    def addDataToSubplot(self, td, colID, plotID, formatstring, legend=''):
         self.colIDs.append(colID);
         self.td.append(td)
         # Add lines to subplot
         figure(self.figureId)
         axis = subplot(self.subplotDim[0], self.subplotDim[1], plotID)
         self.axes.append(axis);
-        self.lines.append(axis.plot([], [], c=color, label=legend)[0])
+        self.lines.append(axis.plot([], [], formatstring, label=legend)[0])
         if legend != '':
             plt.legend()
         self.refreshSingleLine(len(self.colIDs)-1)
         
-    def addDataToSubplotMultiple(self, td, colID, plotID, color, legend):
+    def addDataToSubplotMultiple(self, td, colID, plotID, formatstring, legend):
         for i in xrange(0,len(colID)):
             self.colIDs.append(colID[i]);
             self.td.append(td)
@@ -40,7 +40,7 @@ class Plotter:
             figure(self.figureId)
             axis = subplot(self.subplotDim[0], self.subplotDim[1], plotID[i])
             self.axes.append(axis);
-            self.lines.append(axis.plot([], [], c=color[i], label=legend[i])[0])
+            self.lines.append(axis.plot([], [], formatstring[i], label=legend[i])[0])
             if legend[i] != '':
                 plt.legend()
             self.refreshSingleLine(len(self.colIDs)-1)
