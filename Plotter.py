@@ -33,6 +33,7 @@ class Plotter:
         if legend != '':
             plt.legend()
         self.refreshSingleLine(len(self.colIDs)-1)
+        
     def refreshSingleLine(self,lineID):
         figure(self.figureId)
         stepSize = floor(self.td[lineID].end()/self.maxPoints)+1;
@@ -41,6 +42,7 @@ class Plotter:
         self.axes[lineID].relim()
         self.axes[lineID].autoscale_view(True,True,True)
         plt.draw()
+        
     def refresh(self):
         figure(self.figureId)
         for i in xrange(0,len(self.colIDs)):
@@ -56,7 +58,6 @@ class Plotter:
         plt.draw()
         
     def show(self):
-        # Refresh and show plot
+        # show plot
         plt.ioff();            
-        self.refresh();
         plt.show(block=False);

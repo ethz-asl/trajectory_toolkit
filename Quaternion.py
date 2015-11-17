@@ -101,28 +101,6 @@ def q_mean(q):
         return q;
     else:
         n = np.shape(q)[0]
-           
         mean_v = (np.sum(q_boxMinus(q[1:n,],np.kron(np.ones([n-1,1]),q[0,])), axis=0)/n);
         print(mean_v)
         return q_boxPlus(q[0,], mean_v)
-        
-def tests():
-    v1 = np.array([0.2, 0.2, 0.4])#,[0.2,0.4,0.1]])
-    v2 = np.array([1, 0, 0])#,[0.2,0.4,1]])                
-    q1 = q_exp(v1)
-    print(q1)
-    q2 = q_exp(v2)
-    v=np.array([1, 2, 3])#,[0,0,1]])   
-    print('RUN TESTS')
-    print('(q1 x q2)(v):')
-    print(q_rotate(q_mult(q1,q2),v))
-    print('should equal (q1(q2(v)):')
-    print(q_rotate(q1,q_rotate(q2,v)))
-    print('q1 + (q2-q1)')
-    print(q_boxPlus(q1,q_boxMinus(q2,q1)))
-    print('should equal q2')
-    print(q2)
-    print('log(exp(v))')
-    print(q_log(q_exp(v1)))
-    print('should equal v')
-    print(v1)
