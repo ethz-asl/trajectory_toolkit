@@ -353,3 +353,19 @@ class TimedData:
         for i in xrange(0,len(dataID)):
             self.setCol(self.col(dataID[i])+factor*self.col(covID[i])**(1./2),plusID[i])
             self.setCol(self.col(dataID[i])-factor*self.col(covID[i])**(1./2),minusID[i])
+            
+    def quaternionToYpr(self, attIDs, yprIDs):
+        self.d[0:self.end(),yprIDs] = Quaternion.q_toYpr(self.cols(attIDs))
+            
+    def quaternionToYprCov(self, attIDs, attCovIDs, yprCovIDs):
+        J = Quaternion.q_toYprJac(self.cols(attIDs))
+        
+        # Do the multiplication by hand, improve if possible
+        for i in xrange(0,self.length()):
+            self.d[i,yprCovIDs] = np.resize(np.dot(np.dot(np.resize(J[i,:],(3,3)),np.resize(self.cols(attCovIDs)[i,:],(3,3))),np.resize(J[i,:],(3,3)).T),(9))
+            
+    def applyBodyTransformToAttCov(self, attCovIDs, rotation):
+        R = np.resize(Quaternion.q_toRotMat(rotation),(3,3))
+        # Do the multiplication by hand, improve if possible
+        for i in xrange(0,self.length()):
+            self.d[i,attCovIDs] = np.resize(np.dot(np.dot(R,np.resize(self.d[i,attCovIDs],(3,3))),R.T),(9))

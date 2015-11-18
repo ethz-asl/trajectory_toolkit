@@ -11,42 +11,42 @@ def q_mult(q1, q2): #TESTED
 
 def q_Lmat(q):
     L = np.zeros([4,4])
-    L[0,0] = q[0]
-    L[0,1] = -q[1]
-    L[0,2] = -q[2]
-    L[0,3] = -q[3]
-    L[1,0] = q[1]
-    L[1,1] = q[0]
-    L[1,2] = q[3]
-    L[1,3] = -q[2]
-    L[2,0] = q[2]
-    L[2,1] = -q[3]
-    L[2,2] = q[0]
-    L[2,3] = q[1]
-    L[3,0] = q[3]
-    L[3,1] = q[2]
-    L[3,2] = -q[1]
-    L[3,3] = q[0]
+    L[0,0] = q.T[0,]
+    L[0,1] = -q.T[1,]
+    L[0,2] = -q.T[2,]
+    L[0,3] = -q.T[3,]
+    L[1,0] = q.T[1,]
+    L[1,1] = q.T[0,]
+    L[1,2] = q.T[3,]
+    L[1,3] = -q.T[2,]
+    L[2,0] = q.T[2,]
+    L[2,1] = -q.T[3,]
+    L[2,2] = q.T[0,]
+    L[2,3] = q.T[1,]
+    L[3,0] = q.T[3,]
+    L[3,1] = q.T[2,]
+    L[3,2] = -q.T[1,]
+    L[3,3] = q.T[0,]
     return L
 
 def q_Rmat(q):
     R = np.zeros([4,4])
-    R[0,0] = q[0]
-    R[0,1] = -q[1]
-    R[0,2] = -q[2]
-    R[0,3] = -q[3]
-    R[1,0] = q[1]
-    R[1,1] = q[0]
-    R[1,2] = -q[3]
-    R[1,3] = q[2]
-    R[2,0] = q[2]
-    R[2,1] = q[3]
-    R[2,2] = q[0]
-    R[2,3] = -q[1]
-    R[3,0] = q[3]
-    R[3,1] = -q[2]
-    R[3,2] = q[1]
-    R[3,3] = q[0]
+    R[0,0] = q.T[0,]
+    R[0,1] = -q.T[1,]
+    R[0,2] = -q.T[2,]
+    R[0,3] = -q.T[3,]
+    R[1,0] = q.T[1,]
+    R[1,1] = q.T[0,]
+    R[1,2] = -q.T[3,]
+    R[1,3] = q.T[2,]
+    R[2,0] = q.T[2,]
+    R[2,1] = q.T[3,]
+    R[2,2] = q.T[0,]
+    R[2,3] = -q.T[1,]
+    R[3,0] = q.T[3,]
+    R[3,1] = -q.T[2,]
+    R[3,2] = q.T[1,]
+    R[3,3] = q.T[0,]
     return R
 
 def q_invert(q): #TESTED
@@ -103,3 +103,61 @@ def q_mean(q):
         n = np.shape(q)[0]
         mean_v = (np.sum(q_boxMinus(q[1:n,],np.kron(np.ones([n-1,1]),q[0,])), axis=0)/n);
         return q_boxPlus(q[0,], mean_v)
+
+def q_toYpr(q):
+    if q.ndim == 1:
+        ypr = np.zeros([3])
+    else:
+        ypr = np.zeros([np.shape(q)[0],3])
+#     ypr.T[2,] = -np.arctan2(2*(q.T[1,]*q.T[2,]-q.T[0,]*q.T[3,]),1-2*(q.T[2,]*q.T[2,]+q.T[3,]*q.T[3,]))
+#     ypr.T[1,] = np.arcsin(2*(q.T[1,]*q.T[3,]+q.T[0,]*q.T[2,]))
+#     ypr.T[0,] = -np.arctan2(2*(q.T[2,]*q.T[3,]-q.T[0,]*q.T[1,]),1-2*(q.T[1,]*q.T[1,]+q.T[2,]*q.T[2,]))
+    ypr.T[0,] = -np.arctan2(2*(q.T[1,]*q.T[2,]-q.T[0,]*q.T[3,]),1-2*(q.T[2,]*q.T[2,]+q.T[3,]*q.T[3,]))
+    ypr.T[1,] = np.arcsin(2*(q.T[1,]*q.T[3,]+q.T[0,]*q.T[2,]))
+    ypr.T[2,] = -np.arctan2(2*(q.T[2,]*q.T[3,]-q.T[0,]*q.T[1,]),1-2*(q.T[1,]*q.T[1,]+q.T[2,]*q.T[2,]))
+    return ypr
+
+def q_toYprJac(q):
+    if q.ndim == 1:
+        J = np.zeros([9])
+    else:
+        J = np.zeros([np.shape(q)[0],9])
+    ypr = q_toYpr(q)
+    t2 = np.cos(ypr.T[1,])
+    t3 = 1.0/t2
+    t4 = np.cos(ypr.T[2,])
+    t5 = np.sin(ypr.T[2,])
+    t6 = np.sin(ypr.T[1,])
+#     J.T[1,] = -t3*t5 # TODO: this fits unit test, the next seems better with covariance
+#     J.T[0,] = t3*t4
+#     J.T[4,] = t4
+#     J.T[3,] = t5
+#     J.T[8,] = 1.0
+#     J.T[7,] = t3*t5*t6
+#     J.T[6,] = -t3*t4*t6
+    J.T[1,] = t3*t5
+    J.T[2,] = t3*t4
+    J.T[4,] = t4
+    J.T[5,] = -t5
+    J.T[6,] = 1.0
+    J.T[7,] = t3*t5*t6
+    J.T[8,] = t3*t4*t6
+    return J
+
+def q_toRotMat(q):
+    if q.ndim == 1:
+        R = np.zeros([9])
+    else:
+        R = np.zeros([np.shape(q)[0],9])
+    
+    R.T[0,] = 1.0 - 2*q.T[2,]*q.T[2,] - 2*q.T[3,]*q.T[3,]
+    R.T[1,] = 2*(q.T[1,]*q.T[2,]+q.T[3,]*q.T[0,])
+    R.T[2,] = 2*(q.T[1,]*q.T[3,]-q.T[2,]*q.T[0,])
+    R.T[3,] = 2*(q.T[1,]*q.T[2,]-q.T[3,]*q.T[0,])
+    R.T[4,] = 1.0 - 2*q.T[1,]*q.T[1,] - 2*q.T[3,]*q.T[3,]
+    R.T[5,] = 2*(q.T[2,]*q.T[3,]+q.T[1,]*q.T[0,])
+    R.T[6,] = 2*(q.T[1,]*q.T[3,]+q.T[2,]*q.T[0,])
+    R.T[7,] = 2*(q.T[2,]*q.T[3,]-q.T[1,]*q.T[0,])
+    R.T[8,] = 1.0 - 2*q.T[1,]*q.T[1,] - 2*q.T[2,]*q.T[2,]
+    
+    return R
