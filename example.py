@@ -6,6 +6,7 @@ from Plotter import Plotter
 import numpy as np
 import Quaternion
 import Utils
+import RosDataAcquisition
 
 """
  	README:
@@ -23,7 +24,6 @@ import Utils
 isNode = False;
 
 if isNode is not True:
-	from RosDataAcquisition import RosbagStampedTopicLoader
 	""" Initialize Plotters 
 	plotter1: figureID=1, three subplots
 	"""
@@ -54,10 +54,8 @@ if isNode is not True:
 		loaded from topic 'rovio/transform' in example.bag.
 		The indices denote the start column of the position(td1=1, td2=9) and attitude(td1=4, td2=1)
 	"""
-	rbLoader = RosbagStampedTopicLoader('example.bag', '/rovio/transform');
-	rbLoader.loadTransformStamped(td1,posIDs1[0],attIDs1[0])
-	rbLoader = RosbagStampedTopicLoader('example.bag', '/rovio/transform');
-	rbLoader.loadTransformStamped(td2,posIDs2[0],attIDs2[0])
+	RosDataAcquisition.rosBagLoadTransformStamped('example.bag','/rovio/transform',td1,posIDs1[0],attIDs1[0])
+	RosDataAcquisition.rosBagLoadTransformStamped('example.bag','/rovio/transform',td2,posIDs2[0],attIDs2[0])
 	
 	# Add initial x to plot
 	plotter1.addDataToSubplot(td1, posIDs1[0], 1, 'r', 'td1In x');

@@ -51,37 +51,6 @@ class TransformStampedListener:
         rospy.Subscriber(topic, TransformStamped, self.callback)
     def callback(self,msg):
         addTransformStamped(self.td, msg, self.posID, self.attID)
-    
-class RosbagStampedTopicLoader:
-    # TODO: Provide Functionality that allows changing of bagfile and topic etc.
-    bag = []
-    stamp = []
-    topic = []
-    
-    def __init__(self, filename, topic):
-        # Get rosbag
-        self.bag = rb.Bag(filename)
-        self.topic = topic
-        # Count number of entries
-        counter = 0
-        for topic, msg, t in self.bag.read_messages(topics=[self.topic]):
-            counter = counter + 1
-        print("loading " + filename + ", found " + str(counter) +" "+ self.topic +" entries")
-        # Allocate time vector
-        self.stamp = np.empty([counter,1])
-        # Fill time array
-        counter = 0
-        for topic, msg, t in self.bag.read_messages(topics=[self.topic]):
-            self.stamp[counter, 0] = msg.header.stamp.to_sec();
-            counter = counter + 1
-            
-    def loadTransformStamped(self, td, posID, attID):
-        # If timedata is empty fill it up with the transforms
-        if( td.last == (-1) ):
-            for topic, msg, t in self.bag.read_messages(topics=[self.topic]):
-                addTransformStamped(td, msg, posID, attID)
-        else:
-            print('Implement functionality when timedata is not empty');
             
 def rosBagCountTopic(bag, topic):
     counter = 0
