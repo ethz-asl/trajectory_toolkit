@@ -2,6 +2,7 @@ import unittest
 from TimedData import TimedData
 import numpy as np
 import Quaternion
+from cmath import sqrt
 
 
 class TestTimedData(unittest.TestCase):
@@ -12,10 +13,23 @@ class TestTimedData(unittest.TestCase):
         q1 = Quaternion.q_exp(v1)
         q2 = Quaternion.q_exp(v2)
         v=np.array([1, 2, 3])
+        # Testing Mult and rotate
         np.testing.assert_almost_equal(Quaternion.q_rotate(Quaternion.q_mult(q1,q2),v), Quaternion.q_rotate(q1,Quaternion.q_rotate(q2,v)), decimal=7)
+        np.testing.assert_almost_equal(Quaternion.q_rotate(q1,v2), np.resize(Quaternion.q_toRotMat(q1),(3,3)).dot(v2), decimal=7)
+        # Testing Boxplus, Boxminus, Log and Exp
         np.testing.assert_almost_equal(Quaternion.q_boxPlus(q1,Quaternion.q_boxMinus(q2,q1)), q2, decimal=7)
         np.testing.assert_almost_equal(Quaternion.q_log(q1), v1, decimal=7)
-        np.testing.assert_almost_equal(Quaternion.q_rotate(q1,v2), np.resize(Quaternion.q_toRotMat(q1),(3,3)).dot(v2), decimal=7)
+        # Testing Lmat and Rmat
+        np.testing.assert_almost_equal(Quaternion.q_mult(q1,q2), Quaternion.q_Lmat(q1).dot(q2), decimal=7)
+        np.testing.assert_almost_equal(Quaternion.q_mult(q1,q2), Quaternion.q_Rmat(q2).dot(q1), decimal=7)
+        # Testing ypr and quat
+        roll = 0.2
+        pitch = -0.5
+        yaw = 2.5
+        q_test = Quaternion.q_mult(np.array([np.cos(0.5*pitch), 0, np.sin(0.5*pitch), 0]),np.array([np.cos(0.5*yaw), 0, 0, np.sin(0.5*yaw)]))
+        q_test = Quaternion.q_mult(np.array([np.cos(0.5*roll), np.sin(0.5*roll), 0, 0]),q_test)
+        np.testing.assert_almost_equal(Quaternion.q_toYpr(q_test), np.array([roll, pitch, yaw]), decimal=7)
+        # Testing Jacobian of Ypr
         for i in np.arange(0,3):
             dv1 = np.array([0.0, 0.0, 0.0])
             dv1[i] = 1.0

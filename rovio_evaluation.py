@@ -5,15 +5,18 @@ from Plotter import Plotter
 import Quaternion
 import Utils
 import RosDataAcquisition
-from RosDataAcquisition import RosbagStampedTopicLoader
+import CsvDataAcquisition
 import numpy as np
 
-rovioOutputBag = '2015-11-17-14-56-45.bag'
+rovioOutputBag = '/home/michael/datasets/euroc/01_easy/rovio/2015-12-18-08-51-27.bag'
 rovioOutputTopic = '/rovio/odometry'
-viconGroundtruthBag = '/home/michael/datasets/FlyingWithBurri/2015-11-16-10-12-40.bag'
+okvisOutputFile = '/home/michael/datasets/euroc/01_easy/okvis/ml_01_easy.bag'
+okvisOutputTopic = 'okvis/okvis_node/okvis_transform'
+viconGroundtruthFile = '/home/michael/datasets/euroc/01_easy/euroc_pose.csv'
+# viconGroundtruthFile = '/home/michael/datasets/FlyingWithBurri/2015-11-16-10-12-40.bag'
 viconGroundtruthTopic = '/bluebird/vrpn_client/estimated_transform'
-startcut = 25
-endcut = 40
+startcut = 0
+endcut = 0
 
 plotterRon = Plotter(1, [1,1])
 plotterAtt = Plotter(2, [4,1])
@@ -36,6 +39,7 @@ rovio_yprID = [40,41,42]
 rovio_yprCovID = np.arange(43,52)
 rovio_yprSpID = [52,53,54]
 rovio_yprSmID = [55,56,57]
+
 td_vicon = TimedData(18)
 vicon_posID = [1,2,3]
 vicon_attID = [4,5,6,7]
@@ -45,29 +49,31 @@ vicon_ronID = 14
 vicon_yprID = [15,16,17]
 
 RosDataAcquisition.rosBagLoadOdometry(rovioOutputBag, rovioOutputTopic ,td_rovio,rovio_posID[0],rovio_attID[0],rovio_velID[0],rovio_rorID[0],rovio_posCovID[0],rovio_attCovID[0])
-td_rovio.cropTimes(td_rovio.getFirstTime()+startcut,td_rovio.getLastTime()-endcut)
-td_rovio.applyTimeOffset(-td_rovio.getFirstTime())
 td_rovio.computeNormOfColumns(rovio_rorID,rovio_ronID)
 
-RosDataAcquisition.rosBagLoadTransformStamped(viconGroundtruthBag,viconGroundtruthTopic,td_vicon,vicon_posID[0],vicon_attID[0])
+if(viconGroundtruthFile.endswith('.csv')):
+    CsvDataAcquisition.csvLoadTransform(viconGroundtruthFile, 0, 1, 4, td_vicon, vicon_posID[0], vicon_attID[0])
+elif(viconGroundtruthFile.endswith('.bag')):
+    RosDataAcquisition.rosBagLoadTransformStamped(viconGroundtruthFile,viconGroundtruthTopic,td_vicon,vicon_posID[0],vicon_attID[0])
 td_vicon.cropTimes(td_vicon.getFirstTime()+startcut,td_vicon.getLastTime()-endcut)
+td_vicon.applyTimeOffset(-td_vicon.getFirstTime())
 td_vicon.computeRotationalRateFromAttitude(vicon_attID[0],vicon_rorID[0],2,2)
 td_vicon.computeNormOfColumns(vicon_rorID,vicon_ronID)
  
-to = td_vicon.getTimeOffset(vicon_ronID,td_rovio,rovio_ronID)
-td_vicon.applyTimeOffset(-to)
+to = td_rovio.getTimeOffset(rovio_ronID,td_vicon,vicon_ronID)
+td_rovio.applyTimeOffset(-to)
+td_rovio.cropTimes(td_vicon.getFirstTime(),td_vicon.getLastTime())
 
 plotterRon.addDataToSubplot(td_rovio, rovio_ronID, 1, 'r', 'rovio rotational rate norm')
 plotterRon.addDataToSubplot(td_vicon, vicon_ronID, 1, 'b', 'vicon rotational rate norm')
 
 td_vicon.computeVelocitiesInBodyFrameFromPostionInWorldFrame(vicon_posID, vicon_velID, vicon_attID)
 
-td_rovio.applyBodyTransform(rovio_posID[0], rovio_attID[0], np.zeros(3), np.array([0,1,0,0]))
-td_rovio.applyBodyTransformToAttCov(rovio_attCovID, np.array([0,1,0,0]))
-td_rovio.applyBodyTransformToTwist(rovio_velID[0], rovio_rorID[0], np.zeros(3), np.array([0,1,0,0]))
-td_rovio.applyBodyTransform(rovio_posID[0], rovio_attID[0], np.zeros(3), np.array([(1-0.6*0.6)**(1./2),0,0.6,0]))
-td_rovio.applyBodyTransformToAttCov(rovio_attCovID, np.array([(1-0.6*0.6)**(1./2),0,0.6,0]))
-td_rovio.applyBodyTransformToTwist(rovio_velID[0], rovio_rorID[0], np.zeros(3), np.array([(1-0.6*0.6)**(1./2),0,0.6,0]))
+bodyTransformForBetterPlotRangePos = np.zeros(3)
+bodyTransformForBetterPlotRangeAtt = Quaternion.q_mult(np.array([(1-0.6*0.6)**(1./2),0,0.6,0]),np.array([0,1,0,0]))
+td_rovio.applyBodyTransform(rovio_posID[0], rovio_attID[0], bodyTransformForBetterPlotRangePos, bodyTransformForBetterPlotRangeAtt)
+td_rovio.applyBodyTransformToAttCov(rovio_attCovID, bodyTransformForBetterPlotRangeAtt)
+td_rovio.applyBodyTransformToTwist(rovio_velID[0], rovio_rorID[0], bodyTransformForBetterPlotRangePos, bodyTransformForBetterPlotRangeAtt)
 td_rovio.applyInertialTransform(rovio_posID[0], rovio_attID[0], np.zeros(3), np.array([0,0,0,1]))
 
 B_r_BC_est, qCB_est = td_vicon.calibrateBodyTransform(vicon_velID[0], vicon_rorID[0], td_rovio, rovio_velID[0],rovio_rorID[0])

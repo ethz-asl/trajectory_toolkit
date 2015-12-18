@@ -109,12 +109,9 @@ def q_toYpr(q):
         ypr = np.zeros([3])
     else:
         ypr = np.zeros([np.shape(q)[0],3])
-#     ypr.T[2,] = -np.arctan2(2*(q.T[1,]*q.T[2,]-q.T[0,]*q.T[3,]),1-2*(q.T[2,]*q.T[2,]+q.T[3,]*q.T[3,]))
-#     ypr.T[1,] = np.arcsin(2*(q.T[1,]*q.T[3,]+q.T[0,]*q.T[2,]))
-#     ypr.T[0,] = -np.arctan2(2*(q.T[2,]*q.T[3,]-q.T[0,]*q.T[1,]),1-2*(q.T[1,]*q.T[1,]+q.T[2,]*q.T[2,]))
-    ypr.T[0,] = -np.arctan2(2*(q.T[1,]*q.T[2,]-q.T[0,]*q.T[3,]),1-2*(q.T[2,]*q.T[2,]+q.T[3,]*q.T[3,]))
-    ypr.T[1,] = np.arcsin(2*(q.T[1,]*q.T[3,]+q.T[0,]*q.T[2,]))
-    ypr.T[2,] = -np.arctan2(2*(q.T[2,]*q.T[3,]-q.T[0,]*q.T[1,]),1-2*(q.T[1,]*q.T[1,]+q.T[2,]*q.T[2,]))
+    ypr.T[0,] = np.arctan2(2*(q.T[2,]*q.T[3,]+q.T[0,]*q.T[1,]),1-2*(q.T[2,]*q.T[2,]+q.T[1,]*q.T[1,]))
+    ypr.T[1,] = -np.arcsin(2*(q.T[1,]*q.T[3,]-q.T[0,]*q.T[2,]))
+    ypr.T[2,] = np.arctan2(2*(q.T[1,]*q.T[2,]+q.T[0,]*q.T[3,]),1-2*(q.T[2,]*q.T[2,]+q.T[3,]*q.T[3,]))
     return ypr
 
 def q_toYprJac(q):
@@ -125,23 +122,16 @@ def q_toYprJac(q):
     ypr = q_toYpr(q)
     t2 = np.cos(ypr.T[1,])
     t3 = 1.0/t2
-    t4 = np.cos(ypr.T[2,])
-    t5 = np.sin(ypr.T[2,])
+    t4 = np.cos(ypr.T[0,])
+    t5 = np.sin(ypr.T[0,])
     t6 = np.sin(ypr.T[1,])
-#     J.T[1,] = -t3*t5 # TODO: this fits unit test, the next seems better with covariance
-#     J.T[0,] = t3*t4
-#     J.T[4,] = t4
-#     J.T[3,] = t5
-#     J.T[8,] = 1.0
-#     J.T[7,] = t3*t5*t6
-#     J.T[6,] = -t3*t4*t6
-    J.T[1,] = t3*t5
-    J.T[2,] = t3*t4
+    J.T[0,] = 1.0
+    J.T[1,] = t3*t5*t6
+    J.T[2,] = t3*t4*t6
     J.T[4,] = t4
     J.T[5,] = -t5
-    J.T[6,] = 1.0
-    J.T[7,] = t3*t5*t6
-    J.T[8,] = t3*t4*t6
+    J.T[7,] = t3*t5
+    J.T[8,] = t3*t4
     return J
 
 def q_toRotMat(q):
