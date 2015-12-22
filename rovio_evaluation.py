@@ -10,14 +10,13 @@ import numpy as np
 from pylab import *
 import matplotlib.pyplot as plt
 
-# TODO: fixed VICON-IMU
 # File names and settings
 ID = 0
 
 if ID == 0: # MH_01_easy with OKVIS
     rovioOutputBag = '/home/michael/datasets/euroc/MH_01_easy/rovio/2015-12-18-08-51-27.bag'
     rovioOutputTopic = '/rovio/odometry'
-    okvisOutputFile = '/home/michael/datasets/euroc/MH_01_easy/okvis/ml_01_easy_0.5speed.bag'
+    okvisOutputFile = '/home/michael/datasets/euroc/MH_01_easy/okvis/2015-12-22-15-49-07.bag'
     okvisOutputTopic = '/okvis/okvis_node/okvis_transform'
     viconGroundtruthFile = '/home/michael/datasets/euroc/MH_01_easy/data.csv'
     viconGroundtruthTopic = ''
@@ -26,8 +25,9 @@ if ID == 0: # MH_01_easy with OKVIS
     MrMV = np.array([0.0, 0.0, 0.0])
     qVM = np.array([1.0, 0, 0, 0])
     bodyAlignViconToRovio = False
+    bodyAlignOkvisToVicon = False
     doRovio = True
-    doOkvis = False
+    doOkvis = True
     plotRon = False
     plotAtt = False
     plotPos = True
@@ -48,6 +48,7 @@ if ID == 1: # MH_05_difficult
     MrMV = np.array([0.0, 0.0, 0.0])
     qVM = np.array([1.0, 0, 0, 0])
     bodyAlignViconToRovio = False
+    bodyAlignOkvisToVicon = False
     doRovio = True
     doOkvis = False
     plotRon = False
@@ -58,41 +59,43 @@ if ID == 1: # MH_05_difficult
     plotYpr = True
     plotLeuti = True
 
-if ID == 2: # V1_03_difficult
+if ID == 2: # V1_03_difficult with OKVIS
     rovioOutputBag = '/home/michael/datasets/euroc/V1_03_difficult/rovio/2015-12-21-17-21-32.bag'
     rovioOutputTopic = '/rovio/odometry'
-    okvisOutputFile = ''
-    okvisOutputTopic = ''
+    okvisOutputFile = '/home/michael/datasets/euroc/V1_03_difficult/okvis/2015-12-22-16-11-13.bag'
+    okvisOutputTopic = '/okvis/okvis_node/okvis_transform'
     viconGroundtruthFile = '/home/michael/datasets/euroc/V1_03_difficult/data.csv'
     viconGroundtruthTopic = ''
     startcut = 0
-    endcut = 10
+    endcut = 0
     MrMV = np.array([0.0, 0.0, 0.0])
     qVM = np.array([1.0, 0, 0, 0])
     MtMV = -3.80322e-02
     bodyAlignViconToRovio = False
+    bodyAlignOkvisToVicon = False
     doRovio = True
-    doOkvis = False
+    doOkvis = True
     plotRon = False
     plotAtt = False
     plotPos = True
     plotVel = True
     plotRor = True
     plotYpr = True
-    plotLeuti = False
+    plotLeuti = True
 
-if ID == 3:
-    rovioOutputBag = '/home/michael/workspace/trajectory_toolkit/2015-11-17-14-56-45.bag'
+if ID == 3: # FlyingWithBurri/rounds_6
+    rovioOutputBag = '/home/michael/datasets/FlyingWithBurri/rounds_6/2015-11-17-14-56-45.bag'
     rovioOutputTopic = '/rovio/odometry'
     okvisOutputFile = ''
     okvisOutputTopic = ''
-    viconGroundtruthFile = '/home/michael/datasets/FlyingWithBurri/2015-11-16-10-12-40.bag'
+    viconGroundtruthFile = '/home/michael/datasets/FlyingWithBurri/rounds_6/2015-11-16-10-12-40.bag'
     viconGroundtruthTopic = '/bluebird/vrpn_client/estimated_transform'
     startcut = 20
     endcut = 45
     MrMV = np.array([6.90120e-02, -2.78077e-02, -1.23948e-01]) # TODO: check
     qVM = np.array([1.42930e-03, 8.17427e-01, -1.17036e-02, 5.75911e-01])
     bodyAlignViconToRovio = True
+    bodyAlignOkvisToVicon = False
     doRovio = True
     doOkvis = False
     plotRon = False
@@ -102,6 +105,29 @@ if ID == 3:
     plotRor = True
     plotYpr = True
     plotLeuti = True
+
+if ID == 4: # bloesch_leo/planar_1
+    rovioOutputBag = '/home/michael/datasets/bloesch_leo/planar_1/2015-12-22-15-13-09.bag'
+    rovioOutputTopic = '/rovio/odometry'
+    okvisOutputFile = ''
+    okvisOutputTopic = ''
+    viconGroundtruthFile = '/home/michael/datasets/bloesch_leo/planar_1/2015-12-22-14-15-42.bag'
+    viconGroundtruthTopic = '/bluebird/vrpn_client/estimated_transform'
+    startcut = 0
+    endcut = 0
+    MrMV = np.array([6.90120e-02, -2.78077e-02, -1.23948e-01]) # TODO: check
+    qVM = np.array([1.42930e-03, 8.17427e-01, -1.17036e-02, 5.75911e-01])
+    bodyAlignViconToRovio = False
+    bodyAlignOkvisToVicon = False
+    doRovio = True
+    doOkvis = False
+    plotRon = False
+    plotAtt = False
+    plotPos = False
+    plotVel = False
+    plotRor = False
+    plotYpr = False
+    plotLeuti = False
 
 if True: # Plotter initialization
     if plotRon:
@@ -191,45 +217,54 @@ if plotRon: # Plotting rotational rate norm
     if doOkvis:
         plotterRon.addDataToSubplot(td_okvis, okvis_ronID, 1, 'g', 'okvis rotational rate norm')
 
-if doRovio: # Transform body coordinate frame for better vizualization
+if True: # Transform body coordinate frame for better vizualization, TODO: add to config
     bodyTransformForBetterPlotRangePos = np.zeros(3)
-    bodyTransformForBetterPlotRangeAtt = Quaternion.q_mult(np.array([(1-0.6*0.6)**(1./2),0,0.6,0]),np.array([0,1,0,0]))
-    td_rovio.applyBodyTransform(rovio_posID[0], rovio_attID[0], bodyTransformForBetterPlotRangePos, bodyTransformForBetterPlotRangeAtt)
-    td_rovio.applyBodyTransformToAttCov(rovio_attCovID, bodyTransformForBetterPlotRangeAtt)
-    td_rovio.applyBodyTransformToTwist(rovio_velID[0], rovio_rorID[0], bodyTransformForBetterPlotRangePos, bodyTransformForBetterPlotRangeAtt)
-    td_rovio.applyInertialTransform(rovio_posID[0], rovio_attID[0], np.zeros(3), np.array([0,0,0,1]))
- 
-if doRovio: # Align Vicon to Rovio
+    bodyTransformForBetterPlotRangeAtt = Quaternion.q_mult(np.array([(1-0.6*0.6)**(1./2),0,0.6,0]),np.array([0.0,1.0,0.0,0.0]))
+    if doRovio:
+        td_rovio.applyBodyTransform(rovio_posID[0], rovio_attID[0], bodyTransformForBetterPlotRangePos, bodyTransformForBetterPlotRangeAtt)
+        td_rovio.applyBodyTransformToAttCov(rovio_attCovID, bodyTransformForBetterPlotRangeAtt)
+        td_rovio.applyBodyTransformToTwist(rovio_velID[0], rovio_rorID[0], bodyTransformForBetterPlotRangePos, bodyTransformForBetterPlotRangeAtt)
+        td_rovio.applyInertialTransform(rovio_posID[0], rovio_attID[0], np.zeros(3), np.array([0,0,0,1]))
+    if doOkvis:
+        td_okvis.applyBodyTransform(okvis_posID[0], okvis_attID[0], bodyTransformForBetterPlotRangePos, bodyTransformForBetterPlotRangeAtt)
+        td_okvis.applyBodyTransformToTwist(okvis_velID[0], okvis_rorID[0], bodyTransformForBetterPlotRangePos, bodyTransformForBetterPlotRangeAtt)
+        td_okvis.applyInertialTransform(okvis_posID[0], okvis_attID[0], np.zeros(3), np.array([0,0,0,1]))
+        
+if True: # Align Vicon to Rovio using calibration (body frame)
     B_r_BC_est = -Quaternion.q_rotate(qVM, MrMV) + Quaternion.q_rotate(Quaternion.q_inverse(qVM),bodyTransformForBetterPlotRangePos)
     qCB_est = Quaternion.q_mult(bodyTransformForBetterPlotRangeAtt,Quaternion.q_inverse(qVM))
+    td_vicon.applyBodyTransform(vicon_posID[0], vicon_attID[0], B_r_BC_est, qCB_est)
+    td_vicon.applyBodyTransformToTwist(vicon_velID[0], vicon_rorID[0], B_r_BC_est, qCB_est)
+ 
+if doRovio and bodyAlignViconToRovio: # Align Vicon to Rovio (body frame)
+    B_r_BC_est, qCB_est = td_vicon.calibrateBodyTransform(vicon_velID[0], vicon_rorID[0], td_rovio, rovio_velID[0],rovio_rorID[0])
+    print('Calibrate Body Transform for Rovio:')
     print('Quaternion Rotation qCB_est:\tw:' + str(qCB_est[0]) + '\tx:' + str(qCB_est[1]) + '\ty:' + str(qCB_est[2]) + '\tz:' + str(qCB_est[3]))
     print('Translation Vector B_r_BC_est:\tx:' + str(B_r_BC_est[0]) + '\ty:' + str(B_r_BC_est[1]) + '\tz:' + str(B_r_BC_est[2]))
-    if bodyAlignViconToRovio:
-        B_r_BC_est, qCB_est = td_vicon.calibrateBodyTransform(vicon_velID[0], vicon_rorID[0], td_rovio, rovio_velID[0],rovio_rorID[0])
-        print('Calibrate Body Transform:')
-        print('Quaternion Rotation qCB_est:\tw:' + str(qCB_est[0]) + '\tx:' + str(qCB_est[1]) + '\ty:' + str(qCB_est[2]) + '\tz:' + str(qCB_est[3]))
-        print('Translation Vector B_r_BC_est:\tx:' + str(B_r_BC_est[0]) + '\ty:' + str(B_r_BC_est[1]) + '\tz:' + str(B_r_BC_est[2]))
-    
-    J_r_JI_est, qIJ_est = td_vicon.calibrateInertialTransform(vicon_posID[0], vicon_attID[0], td_rovio, rovio_posID[0],rovio_attID[0], B_r_BC_est, qCB_est, [0,1,2,3,4,5])
-    print('Calibrate Inertial Transform:')
-    print('uaternion Rotation qIJ_est:\tw:' + str(qIJ_est[0]) + '\tx:' + str(qIJ_est[1]) + '\ty:' + str(qIJ_est[2]) + '\tz:' + str(qIJ_est[3]))
-    print('Translation Vector J_r_JI_est:\tx:' + str(J_r_JI_est[0]) + '\ty:' + str(J_r_JI_est[1]) + '\tz:' + str(J_r_JI_est[2]))
     td_vicon.applyBodyTransform(vicon_posID[0], vicon_attID[0], B_r_BC_est, qCB_est)
-    td_vicon.applyInertialTransform(vicon_posID[0], vicon_attID[0],J_r_JI_est,qIJ_est)
     td_vicon.applyBodyTransformToTwist(vicon_velID[0], vicon_rorID[0], B_r_BC_est, qCB_est)
 
-if doOkvis: # Align Okvis to Vicon
+if doOkvis and bodyAlignOkvisToVicon: # Align Okvis to Vicon (body frame)
     B_r_BC_est, qCB_est = td_okvis.calibrateBodyTransform(okvis_velID[0], okvis_rorID[0], td_vicon, vicon_velID[0],vicon_rorID[0])
-    print('Calibrate Body Transform:')
+    print('Calibrate Body Transform for Okvis:')
     print('Quaternion Rotation qCB_est:\tw:' + str(qCB_est[0]) + '\tx:' + str(qCB_est[1]) + '\ty:' + str(qCB_est[2]) + '\tz:' + str(qCB_est[3]))
     print('Translation Vector B_r_BC_est:\tx:' + str(B_r_BC_est[0]) + '\ty:' + str(B_r_BC_est[1]) + '\tz:' + str(B_r_BC_est[2]))
-    J_r_JI_est, qIJ_est = td_okvis.calibrateInertialTransform(okvis_posID[0], okvis_attID[0], td_vicon, vicon_posID[0],vicon_attID[0], B_r_BC_est, qCB_est, [0,1,2,3,4,5])
-    print('Calibrate Inertial Transform:')
+    td_okvis.applyBodyTransform(okvis_posID[0], okvis_attID[0], B_r_BC_est, qCB_est)
+    td_okvis.applyBodyTransformToTwist(okvis_velID[0], okvis_rorID[0], B_r_BC_est, qCB_est)
+    
+if doRovio: # Align Vicon to Rovio (Inertial frames)
+    J_r_JI_est, qIJ_est = td_vicon.calibrateInertialTransform(vicon_posID[0], vicon_attID[0], td_rovio, rovio_posID[0],rovio_attID[0], np.array([0.0,0.0,0.0]), np.array([1.0,0.0,0.0,0.0]), [0,1,2,3,4,5])
+    print('Calibrate Inertial Transform for Rovio:')
     print('uaternion Rotation qIJ_est:\tw:' + str(qIJ_est[0]) + '\tx:' + str(qIJ_est[1]) + '\ty:' + str(qIJ_est[2]) + '\tz:' + str(qIJ_est[3]))
     print('Translation Vector J_r_JI_est:\tx:' + str(J_r_JI_est[0]) + '\ty:' + str(J_r_JI_est[1]) + '\tz:' + str(J_r_JI_est[2]))
-    td_okvis.applyBodyTransform(okvis_posID[0], okvis_attID[0], B_r_BC_est, qCB_est)
+    td_vicon.applyInertialTransform(vicon_posID[0], vicon_attID[0],J_r_JI_est,qIJ_est)
+
+if doOkvis: # Align Okvis to Vicon (Inertial frames)
+    J_r_JI_est, qIJ_est = td_okvis.calibrateInertialTransform(okvis_posID[0], okvis_attID[0], td_vicon, vicon_posID[0],vicon_attID[0], np.array([0.0,0.0,0.0]), np.array([1.0,0.0,0.0,0.0]), [0,1,2,3,4,5])
+    print('Calibrate Inertial Transform for Okvis:')
+    print('uaternion Rotation qIJ_est:\tw:' + str(qIJ_est[0]) + '\tx:' + str(qIJ_est[1]) + '\ty:' + str(qIJ_est[2]) + '\tz:' + str(qIJ_est[3]))
+    print('Translation Vector J_r_JI_est:\tx:' + str(J_r_JI_est[0]) + '\ty:' + str(J_r_JI_est[1]) + '\tz:' + str(J_r_JI_est[2]))
     td_okvis.applyInertialTransform(okvis_posID[0], okvis_attID[0],J_r_JI_est,qIJ_est)
-    td_okvis.applyBodyTransformToTwist(okvis_velID[0], okvis_rorID[0], B_r_BC_est, qCB_est)
 
 if plotPos: # Position plotting
     if doRovio:
