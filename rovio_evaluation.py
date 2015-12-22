@@ -19,12 +19,15 @@ if ID == 0: # MH_01_easy with OKVIS
     rovioOutputTopic = '/rovio/odometry'
     okvisOutputFile = '/home/michael/datasets/euroc/MH_01_easy/okvis/ml_01_easy_0.5speed.bag'
     okvisOutputTopic = '/okvis/okvis_node/okvis_transform'
-    viconGroundtruthFile = '/home/michael/datasets/euroc/MH_01_easy/euroc_pose.csv'
+    viconGroundtruthFile = '/home/michael/datasets/euroc/MH_01_easy/data.csv'
     viconGroundtruthTopic = ''
     startcut = 40
     endcut = 10
+    MrMV = np.array([0.0, 0.0, 0.0])
+    qVM = np.array([1.0, 0, 0, 0])
+    bodyAlignViconToRovio = False
     doRovio = True
-    doOkvis = True
+    doOkvis = False
     plotRon = False
     plotAtt = False
     plotPos = True
@@ -42,6 +45,9 @@ if ID == 1: # MH_05_difficult
     viconGroundtruthTopic = ''
     startcut = 20
     endcut = 10
+    MrMV = np.array([0.0, 0.0, 0.0])
+    qVM = np.array([1.0, 0, 0, 0])
+    bodyAlignViconToRovio = False
     doRovio = True
     doOkvis = False
     plotRon = False
@@ -60,7 +66,11 @@ if ID == 2: # V1_03_difficult
     viconGroundtruthFile = '/home/michael/datasets/euroc/V1_03_difficult/data.csv'
     viconGroundtruthTopic = ''
     startcut = 0
-    endcut = 5
+    endcut = 10
+    MrMV = np.array([0.0, 0.0, 0.0])
+    qVM = np.array([1.0, 0, 0, 0])
+    MtMV = -3.80322e-02
+    bodyAlignViconToRovio = False
     doRovio = True
     doOkvis = False
     plotRon = False
@@ -69,17 +79,20 @@ if ID == 2: # V1_03_difficult
     plotVel = True
     plotRor = True
     plotYpr = True
-    plotLeuti = True
+    plotLeuti = False
 
 if ID == 3:
-    rovioOutputBag = '/home/michael/datasets/euroc/V1_03_difficult/rovio/2015-12-21-17-21-32.bag'
+    rovioOutputBag = '/home/michael/workspace/trajectory_toolkit/2015-11-17-14-56-45.bag'
     rovioOutputTopic = '/rovio/odometry'
     okvisOutputFile = ''
     okvisOutputTopic = ''
     viconGroundtruthFile = '/home/michael/datasets/FlyingWithBurri/2015-11-16-10-12-40.bag'
     viconGroundtruthTopic = '/bluebird/vrpn_client/estimated_transform'
     startcut = 20
-    endcut = 10
+    endcut = 45
+    MrMV = np.array([6.90120e-02, -2.78077e-02, -1.23948e-01]) # TODO: check
+    qVM = np.array([1.42930e-03, 8.17427e-01, -1.17036e-02, 5.75911e-01])
+    bodyAlignViconToRovio = True
     doRovio = True
     doOkvis = False
     plotRon = False
@@ -187,10 +200,16 @@ if doRovio: # Transform body coordinate frame for better vizualization
     td_rovio.applyInertialTransform(rovio_posID[0], rovio_attID[0], np.zeros(3), np.array([0,0,0,1]))
  
 if doRovio: # Align Vicon to Rovio
-    B_r_BC_est, qCB_est = td_vicon.calibrateBodyTransform(vicon_velID[0], vicon_rorID[0], td_rovio, rovio_velID[0],rovio_rorID[0])
-    print('Calibrate Body Transform:')
+    B_r_BC_est = -Quaternion.q_rotate(qVM, MrMV) + Quaternion.q_rotate(Quaternion.q_inverse(qVM),bodyTransformForBetterPlotRangePos)
+    qCB_est = Quaternion.q_mult(bodyTransformForBetterPlotRangeAtt,Quaternion.q_inverse(qVM))
     print('Quaternion Rotation qCB_est:\tw:' + str(qCB_est[0]) + '\tx:' + str(qCB_est[1]) + '\ty:' + str(qCB_est[2]) + '\tz:' + str(qCB_est[3]))
     print('Translation Vector B_r_BC_est:\tx:' + str(B_r_BC_est[0]) + '\ty:' + str(B_r_BC_est[1]) + '\tz:' + str(B_r_BC_est[2]))
+    if bodyAlignViconToRovio:
+        B_r_BC_est, qCB_est = td_vicon.calibrateBodyTransform(vicon_velID[0], vicon_rorID[0], td_rovio, rovio_velID[0],rovio_rorID[0])
+        print('Calibrate Body Transform:')
+        print('Quaternion Rotation qCB_est:\tw:' + str(qCB_est[0]) + '\tx:' + str(qCB_est[1]) + '\ty:' + str(qCB_est[2]) + '\tz:' + str(qCB_est[3]))
+        print('Translation Vector B_r_BC_est:\tx:' + str(B_r_BC_est[0]) + '\ty:' + str(B_r_BC_est[1]) + '\tz:' + str(B_r_BC_est[2]))
+    
     J_r_JI_est, qIJ_est = td_vicon.calibrateInertialTransform(vicon_posID[0], vicon_attID[0], td_rovio, rovio_posID[0],rovio_attID[0], B_r_BC_est, qCB_est, [0,1,2,3,4,5])
     print('Calibrate Inertial Transform:')
     print('uaternion Rotation qIJ_est:\tw:' + str(qIJ_est[0]) + '\tx:' + str(qIJ_est[1]) + '\ty:' + str(qIJ_est[2]) + '\tz:' + str(qIJ_est[3]))
