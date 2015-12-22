@@ -369,3 +369,56 @@ class TimedData:
         # Do the multiplication by hand, improve if possible
         for i in xrange(0,self.length()):
             self.d[i,attCovIDs] = np.resize(np.dot(np.dot(R,np.resize(self.d[i,attCovIDs],(3,3))),R.T),(9))
+    
+    def computeLeutiScore(self, posID1, attID1, velID1, other, posID2, attID2, distances, spacings, start):
+        output = np.empty((len(distances),6))
+        outputFull = []
+        startIndex = np.nonzero(self.getTime() >= start)[0][0]
+        
+        for j in np.arange(len(distances)):
+            tracks = [[startIndex, 0.0]]
+            lastAddedStart = 0.0
+            posErrors = []
+            attErrors = []
+        
+            other_interp = TimedData(8)
+            other_interp.initEmptyFromTimes(self.getTime())
+            other.interpolateColumns(other_interp, posID2, [1,2,3])
+            other.interpolateQuaternion(other_interp, attID2[0], 4)
+            
+            it = startIndex
+            while it+1<self.last:
+                # Check for new seeds
+                if(lastAddedStart>spacings[j]):
+                    tracks.append([it, 0.0])
+                    lastAddedStart = 0.0
+                # Add travelled distance
+                d = np.asscalar(Utils.norm(self.d[it,velID1]*(self.d[it+1,0]-self.d[it,0])))
+                lastAddedStart += d
+                tracks = [[x[0], x[1]+d] for x in tracks]
+                # Check if travelled distance large enough
+                while len(tracks) > 0 and tracks[0][1] > distances[j]:
+                    pos1 = Quaternion.q_rotate(self.d[tracks[0][0],attID1], self.d[it+1,posID1]-self.d[tracks[0][0],posID1])
+                    pos2 = Quaternion.q_rotate(other_interp.d[tracks[0][0],[4,5,6,7]], other_interp.d[it+1,[1,2,3]]-other_interp.d[tracks[0][0],[1,2,3]])
+                    att1 = Quaternion.q_mult(self.d[it+1,attID1], Quaternion.q_inverse(self.d[tracks[0][0],attID1]))
+                    att2 = Quaternion.q_mult(other_interp.d[it+1,[4,5,6,7]], Quaternion.q_inverse(other_interp.d[tracks[0][0],[4,5,6,7]]))
+                    posErrors.append(np.asscalar(np.sum((pos2-pos1)**2,axis=-1)))
+                    attErrors.append(np.asscalar(np.sum((Quaternion.q_boxMinus(att1,att2))**2,axis=-1)))
+                    tracks.pop(0)
+                it += 1
+            
+            N = len(posErrors)
+            posErrorRMS = (np.sum(posErrors,axis=-1)/N)**(0.5)
+            posErrorMedian = np.median(posErrors)**(0.5)
+            posErrorStd = np.std(np.array(posErrors)**(0.5))
+            attErrorRMS = (np.sum(attErrors,axis=-1)/N)**(0.5)
+            attErrorMedian = np.median(attErrors)**(0.5)
+            attErrorStd = np.std(np.array(attErrors)**(0.5))
+            print('Evaluated ' + str(N) + ' segments with a travelled distance of ' + str(distances[j]) \
+                   + ':\n  posRMS of ' + str(posErrorRMS) + ' (Median: ' + str(posErrorMedian) + ', Std: ' + str(posErrorStd) + ')' \
+                   + '\n  attRMS of ' + str(attErrorRMS) + ' (Median: ' + str(attErrorMedian) + ', Std: ' + str(attErrorStd) + ')')
+            output[j,:] = [posErrorRMS, posErrorMedian, posErrorStd, attErrorRMS, attErrorMedian, attErrorStd]
+            outputFull.append(np.array(posErrors)**(0.5))
+        return outputFull
+
+

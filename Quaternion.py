@@ -73,7 +73,8 @@ def q_rotate(q1, v1): #TESTED
 
 def q_log(q): #TESTED
     root = np.sqrt(np.maximum(1.0-q.T[0,]*q.T[0,],1e-6))
-    theta = 2.0*np.arccos(np.maximum(np.minimum(q.T[0,],1.0),-1.0))
+    theta = 2.0*np.arcsin(np.maximum(np.minimum(root,1.0),-1.0))
+    theta -= (theta.T > np.pi)*2.0*np.pi
     return (theta/root*q.T[1:4,]).T;
 
 def q_exp(v): #TESTED
