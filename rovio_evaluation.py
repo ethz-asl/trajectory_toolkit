@@ -234,7 +234,7 @@ if True: # Vicon data acquisition and pre-processing
         td_vicon.d[:,0] = td_vicon.d[:,0]*1e-9
     td_vicon.cropTimes(td_vicon.getFirstTime()+startcut,td_vicon.getLastTime()-endcut)
     td_vicon.applyTimeOffset(-td_vicon.getFirstTime())
-    td_vicon.computeRotationalRateFromAttitude(vicon_attID[0],vicon_rorID[0])
+    td_vicon.computeRotationalRateFromAttitude(vicon_attID,vicon_rorID)
     td_vicon.computeNormOfColumns(vicon_rorID,vicon_ronID)
     td_vicon.computeVelocitiesInBodyFrameFromPostionInWorldFrame(vicon_posID, vicon_velID, vicon_attID)
 
@@ -261,7 +261,7 @@ if doOkvis: # Okvis data acquisition and pre-processing
         q_im = -td_okvis.cols(okvis_attID[0:3])
         td_okvis.setCols(q_real,okvis_attID[0])
         td_okvis.setCols(q_im,okvis_attID[1:4])
-    td_okvis.computeRotationalRateFromAttitude(okvis_attID[0],okvis_rorID[0],2,2)
+    td_okvis.computeRotationalRateFromAttitude(okvis_attID,okvis_rorID,2,2)
     td_okvis.computeNormOfColumns(okvis_rorID,okvis_ronID)
     td_okvis.applyTimeOffset(td_vicon.getFirstTime()-td_okvis.getFirstTime())
     to = td_okvis.getTimeOffset(okvis_ronID,td_vicon,vicon_ronID)
@@ -278,50 +278,50 @@ if plotRon: # Plotting rotational rate norm
 
 if True: # Transform body coordinate frame for better vizualization, TODO: add to config
     if doRovio:
-        td_rovio.applyBodyTransform(rovio_posID[0], rovio_attID[0], bodyTransformForBetterPlotRangePos, bodyTransformForBetterPlotRangeAtt)
+        td_rovio.applyBodyTransform(rovio_posID, rovio_attID, bodyTransformForBetterPlotRangePos, bodyTransformForBetterPlotRangeAtt)
         td_rovio.applyBodyTransformToAttCov(rovio_attCovID, bodyTransformForBetterPlotRangeAtt)
-        td_rovio.applyBodyTransformToTwist(rovio_velID[0], rovio_rorID[0], bodyTransformForBetterPlotRangePos, bodyTransformForBetterPlotRangeAtt)
-        td_rovio.applyInertialTransform(rovio_posID[0], rovio_attID[0], np.zeros(3), np.array([0,0,0,1]))
+        td_rovio.applyBodyTransformToTwist(rovio_velID, rovio_rorID, bodyTransformForBetterPlotRangePos, bodyTransformForBetterPlotRangeAtt)
+        td_rovio.applyInertialTransform(rovio_posID, rovio_attID, np.zeros(3), np.array([0,0,0,1]))
     if doOkvis:
-        td_okvis.applyBodyTransform(okvis_posID[0], okvis_attID[0], bodyTransformForBetterPlotRangePos, bodyTransformForBetterPlotRangeAtt)
-        td_okvis.applyBodyTransformToTwist(okvis_velID[0], okvis_rorID[0], bodyTransformForBetterPlotRangePos, bodyTransformForBetterPlotRangeAtt)
-        td_okvis.applyInertialTransform(okvis_posID[0], okvis_attID[0], np.zeros(3), np.array([0,0,0,1]))
+        td_okvis.applyBodyTransform(okvis_posID, okvis_attID, bodyTransformForBetterPlotRangePos, bodyTransformForBetterPlotRangeAtt)
+        td_okvis.applyBodyTransformToTwist(okvis_velID, okvis_rorID, bodyTransformForBetterPlotRangePos, bodyTransformForBetterPlotRangeAtt)
+        td_okvis.applyInertialTransform(okvis_posID, okvis_attID, np.zeros(3), np.array([0,0,0,1]))
         
 if True: # Align Vicon to Rovio using calibration (body frame)
     B_r_BC_est = -Quaternion.q_rotate(qVM, MrMV) + Quaternion.q_rotate(Quaternion.q_inverse(qVM),bodyTransformForBetterPlotRangePos)
     qCB_est = Quaternion.q_mult(bodyTransformForBetterPlotRangeAtt,Quaternion.q_inverse(qVM))
-    td_vicon.applyBodyTransform(vicon_posID[0], vicon_attID[0], B_r_BC_est, qCB_est)
-    td_vicon.applyBodyTransformToTwist(vicon_velID[0], vicon_rorID[0], B_r_BC_est, qCB_est)
+    td_vicon.applyBodyTransform(vicon_posID, vicon_attID, B_r_BC_est, qCB_est)
+    td_vicon.applyBodyTransformToTwist(vicon_velID, vicon_rorID, B_r_BC_est, qCB_est)
  
 if doRovio and bodyAlignViconToRovio: # Align Vicon to Rovio (body frame)
-    B_r_BC_est, qCB_est = td_vicon.calibrateBodyTransform(vicon_velID[0], vicon_rorID[0], td_rovio, rovio_velID[0],rovio_rorID[0])
+    B_r_BC_est, qCB_est = td_vicon.calibrateBodyTransform(vicon_velID, vicon_rorID, td_rovio, rovio_velID,rovio_rorID)
     print('Calibrate Body Transform for Rovio:')
     print('Quaternion Rotation qCB_est:\tw:' + str(qCB_est[0]) + '\tx:' + str(qCB_est[1]) + '\ty:' + str(qCB_est[2]) + '\tz:' + str(qCB_est[3]))
     print('Translation Vector B_r_BC_est:\tx:' + str(B_r_BC_est[0]) + '\ty:' + str(B_r_BC_est[1]) + '\tz:' + str(B_r_BC_est[2]))
-    td_vicon.applyBodyTransform(vicon_posID[0], vicon_attID[0], B_r_BC_est, qCB_est)
-    td_vicon.applyBodyTransformToTwist(vicon_velID[0], vicon_rorID[0], B_r_BC_est, qCB_est)
+    td_vicon.applyBodyTransform(vicon_posID, vicon_attID, B_r_BC_est, qCB_est)
+    td_vicon.applyBodyTransformToTwist(vicon_velID, vicon_rorID, B_r_BC_est, qCB_est)
 
 if doOkvis and bodyAlignOkvisToVicon: # Align Okvis to Vicon (body frame)
-    B_r_BC_est, qCB_est = td_okvis.calibrateBodyTransform(okvis_velID[0], okvis_rorID[0], td_vicon, vicon_velID[0],vicon_rorID[0])
+    B_r_BC_est, qCB_est = td_okvis.calibrateBodyTransform(okvis_velID, okvis_rorID, td_vicon, vicon_velID,vicon_rorID)
     print('Calibrate Body Transform for Okvis:')
     print('Quaternion Rotation qCB_est:\tw:' + str(qCB_est[0]) + '\tx:' + str(qCB_est[1]) + '\ty:' + str(qCB_est[2]) + '\tz:' + str(qCB_est[3]))
     print('Translation Vector B_r_BC_est:\tx:' + str(B_r_BC_est[0]) + '\ty:' + str(B_r_BC_est[1]) + '\tz:' + str(B_r_BC_est[2]))
-    td_okvis.applyBodyTransform(okvis_posID[0], okvis_attID[0], B_r_BC_est, qCB_est)
-    td_okvis.applyBodyTransformToTwist(okvis_velID[0], okvis_rorID[0], B_r_BC_est, qCB_est)
+    td_okvis.applyBodyTransform(okvis_posID, okvis_attID, B_r_BC_est, qCB_est)
+    td_okvis.applyBodyTransformToTwist(okvis_velID, okvis_rorID, B_r_BC_est, qCB_est)
     
 if doRovio: # Align Vicon to Rovio (Inertial frames)
-    J_r_JI_est, qIJ_est = td_vicon.calibrateInertialTransform(vicon_posID[0], vicon_attID[0], td_rovio, rovio_posID[0],rovio_attID[0], np.array([0.0,0.0,0.0]), np.array([1.0,0.0,0.0,0.0]), [0,1,2,3,4,5])
+    J_r_JI_est, qIJ_est = td_vicon.calibrateInertialTransform(vicon_posID, vicon_attID, td_rovio, rovio_posID,rovio_attID, np.array([0.0,0.0,0.0]), np.array([1.0,0.0,0.0,0.0]), [0,1,2,3,4,5])
     print('Calibrate Inertial Transform for Rovio:')
     print('uaternion Rotation qIJ_est:\tw:' + str(qIJ_est[0]) + '\tx:' + str(qIJ_est[1]) + '\ty:' + str(qIJ_est[2]) + '\tz:' + str(qIJ_est[3]))
     print('Translation Vector J_r_JI_est:\tx:' + str(J_r_JI_est[0]) + '\ty:' + str(J_r_JI_est[1]) + '\tz:' + str(J_r_JI_est[2]))
-    td_vicon.applyInertialTransform(vicon_posID[0], vicon_attID[0],J_r_JI_est,qIJ_est)
+    td_vicon.applyInertialTransform(vicon_posID, vicon_attID,J_r_JI_est,qIJ_est)
 
 if doOkvis: # Align Okvis to Vicon (Inertial frames)
-    J_r_JI_est, qIJ_est = td_okvis.calibrateInertialTransform(okvis_posID[0], okvis_attID[0], td_vicon, vicon_posID[0],vicon_attID[0], np.array([0.0,0.0,0.0]), np.array([1.0,0.0,0.0,0.0]), [0,1,2,3,4,5])
+    J_r_JI_est, qIJ_est = td_okvis.calibrateInertialTransform(okvis_posID, okvis_attID, td_vicon, vicon_posID,vicon_attID, np.array([0.0,0.0,0.0]), np.array([1.0,0.0,0.0,0.0]), [0,1,2,3,4,5])
     print('Calibrate Inertial Transform for Okvis:')
     print('uaternion Rotation qIJ_est:\tw:' + str(qIJ_est[0]) + '\tx:' + str(qIJ_est[1]) + '\ty:' + str(qIJ_est[2]) + '\tz:' + str(qIJ_est[3]))
     print('Translation Vector J_r_JI_est:\tx:' + str(J_r_JI_est[0]) + '\ty:' + str(J_r_JI_est[1]) + '\tz:' + str(J_r_JI_est[2]))
-    td_okvis.applyInertialTransform(okvis_posID[0], okvis_attID[0],J_r_JI_est,qIJ_est)
+    td_okvis.applyInertialTransform(okvis_posID, okvis_attID,J_r_JI_est,qIJ_est)
 
 if plotPos: # Position plotting
     if doRovio:

@@ -70,7 +70,7 @@ if isNode is not True:
 	vCB = np.array([0.1,0.2,0.32])
 	qCB = Quaternion.q_exp(vCB)
 	B_r_BC = np.array([1.1,-0.2,0.4])
-	td2.applyBodyTransform(posIDs2[0], attIDs2[0], B_r_BC, qCB)
+	td2.applyBodyTransform(posIDs2, attIDs2, B_r_BC, qCB)
 	print('Applying Body Transform:')
 	print('Rotation Vector ln(qCB):\tvx:' + str(vCB[0]) + '\tvy:' + str(vCB[1]) + '\tvz:' + str(vCB[2]))
 	print('Translation Vector B_r_BC:\trx:' + str(B_r_BC[0]) + '\try:' + str(B_r_BC[1]) + '\trz:' + str(B_r_BC[2]))
@@ -81,7 +81,7 @@ if isNode is not True:
 	vIJ = np.array([0.2,-0.2,-0.4])
 	qIJ = Quaternion.q_exp(vIJ)
 	J_r_JI = np.array([-0.1,0.5,0.1])
-	td2.applyInertialTransform(posIDs2[0], attIDs2[0],J_r_JI,qIJ)
+	td2.applyInertialTransform(posIDs2, attIDs2,J_r_JI,qIJ)
 	print('Applying Inertial Transform:')
 	print('Rotation Vector ln(qIJ):\tvx:' + str(vIJ[0]) + '\tvy:' + str(vIJ[1]) + '\tvz:' + str(vIJ[2]))
 	print('Translation Vector J_r_JI:\trx:' + str(J_r_JI[0]) + '\try:' + str(J_r_JI[1]) + '\trz:' + str(J_r_JI[2]))
@@ -109,8 +109,8 @@ if isNode is not True:
 	td1.computeVelocitiesInBodyFrameFromPostionInWorldFrame(posIDs1, velBIDs1, attIDs1)
 	td2.computeVelocitiesInBodyFrameFromPostionInWorldFrame(posIDs2, velBIDs2, attIDs2)
 	# Calculate the Rotational Rate provide att(td1=4, td2=1) and rot(td1=14, td2=5) start column IDs.
-	td1.computeRotationalRateFromAttitude(attIDs1[0],rorIDs1[0])
-	td2.computeRotationalRateFromAttitude(attIDs2[0],rorIDs2[0])
+	td1.computeRotationalRateFromAttitude(attIDs1,rorIDs1)
+	td2.computeRotationalRateFromAttitude(attIDs2,rorIDs2)
 	# Calculate the Norm of the Rotational Rate provide ror(td1=[14,15,16], td2=[5,6,7]) and rorNorm(td1=17,td2=8) column IDs.
 	td1.computeNormOfColumns(rorIDs1,rorNID1)
 	td2.computeNormOfColumns(rorIDs2,rorNID2)
@@ -125,7 +125,7 @@ if isNode is not True:
 	"""
 		The calibration of the Body Transform needs the velocity and the rotational rate start IDs.
 	"""
-	B_r_BC_est, qCB_est = td1.calibrateBodyTransform(velBIDs1[0],rorIDs1[0],td2, velBIDs2[0],rorIDs2[0])
+	B_r_BC_est, qCB_est = td1.calibrateBodyTransform(velBIDs1,rorIDs1,td2, velBIDs2,rorIDs2)
 	vCB_est = Quaternion.q_log(qCB_est)
 	vCB_err = vCB-vCB_est
 	B_r_BC_err = B_r_BC - B_r_BC_est
@@ -138,7 +138,7 @@ if isNode is not True:
 	"""
 		The calibration of the Intertial Transform needs the velocity and the rotational rate start IDs and the estimated body transform.
 	"""
-	J_r_JI_est, qIJ_est = td1.calibrateInertialTransform(posIDs1[0], attIDs1[0], td2, posIDs2[0], attIDs2[0], B_r_BC_est, qCB_est, [0,1,2])
+	J_r_JI_est, qIJ_est = td1.calibrateInertialTransform(posIDs1, attIDs1, td2, posIDs2, attIDs2, B_r_BC_est, qCB_est, [0,1,2])
 	vIJ_est = Quaternion.q_log(qIJ_est);
 	vIJ_err = vIJ-vIJ_est;
 	J_r_JI_err = J_r_JI - J_r_JI_est;
@@ -150,8 +150,8 @@ if isNode is not True:
 	
 	
 	# Add calibrated x to plot
-	td1.applyBodyTransform(posIDs1[0], attIDs1[0], B_r_BC_est, qCB_est)
-	td1.applyInertialTransform(posIDs1[0], attIDs1[0],J_r_JI_est,qIJ_est)
+	td1.applyBodyTransform(posIDs1, attIDs1, B_r_BC_est, qCB_est)
+	td1.applyInertialTransform(posIDs1, attIDs1,J_r_JI_est,qIJ_est)
 
 	plotter1.addDataToSubplot(td1, posIDs1[0], 3, 'r', 'td1Cal x');
 	plotter1.addDataToSubplot(td2, posIDs2[0], 3, 'b', 'td2Trans x');

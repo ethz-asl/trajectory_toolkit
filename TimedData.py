@@ -144,12 +144,12 @@ class TimedData:
         self.setCols(Quaternion.q_rotate(self.cols(qIDs), self.cols(outputIDs)),outputIDs);
     
     def computeRotationalRateFromAttitude(self, attitudeID, rotationalrateID, a=1, b=0):
-        dv = Quaternion.q_boxMinus(self.d[a+b:self.end(),attitudeID:attitudeID+4],self.d[0:self.end()-(a+b),attitudeID:attitudeID+4])
+        dv = Quaternion.q_boxMinus(self.d[a+b:self.end(),attitudeID],self.d[0:self.end()-(a+b),attitudeID])
         dt = self.getTime()[a+b:self.end()]-self.getTime()[0:self.end()-(a+b)]
         for i in np.arange(0,3):
-            self.d[0:a,rotationalrateID+i].fill(0)
-            self.d[self.end()-b:self.end(),rotationalrateID+i].fill(0)
-            self.d[a:self.end()-b,rotationalrateID+i] = np.divide(dv[:,i],dt);
+            self.d[0:a,rotationalrateID[i]].fill(0)
+            self.d[self.end()-b:self.end(),rotationalrateID[i]].fill(0)
+            self.d[a:self.end()-b,rotationalrateID[i]] = np.divide(dv[:,i],dt);
         
     def interpolateColumns(self, other, colIDs, otherColIDs=None): #TESTED
         # Allow interpolating in to other columns / default is into same column
@@ -180,7 +180,7 @@ class TimedData:
         counterOut = 0;
         counter = 0;
         while other.getTime()[counterOut] <= self.getTime()[counter]:
-            other.d[counterOut,otherColID:otherColID+4] = self.d[counter,colID:colID+4]
+            other.d[counterOut,otherColID] = self.d[counter,colID]
             counterOut += 1
             
         # Interpolation
@@ -190,10 +190,10 @@ class TimedData:
             counter
             if (counter != self.last):
                 d = (other.getTime()[counterOut]-self.getTime()[counter-1])/(self.getTime()[counter]-self.getTime()[counter-1]);
-                other.d[counterOut,otherColID:otherColID+4] = Quaternion.q_slerp(self.d[counter-1,colID:colID+4], self.d[counter,colID:colID+4], d)   
+                other.d[counterOut,otherColID] = Quaternion.q_slerp(self.d[counter-1,colID], self.d[counter,colID], d)   
             else:
                 # Set quaternion equal to last quaternion constant extrapolation
-                other.d[counterOut,otherColID:otherColID+4] = self.d[counter,colID:colID+4];
+                other.d[counterOut,otherColID] = self.d[counter,colID];
             counterOut +=1
         
     def getTimeOffset(self,colID, other, otherColID=None):
@@ -238,46 +238,46 @@ class TimedData:
         self.setCol(self.col(0) + to,0)
         
     def applyBodyTransform(self, posID, attID, translation, rotation):
-        newTranslation = self.cols(np.arange(posID,posID+3)) \
-                         + Quaternion.q_rotate(Quaternion.q_inverse(self.cols(np.arange(attID,attID+4))),
+        newTranslation = self.cols(posID) \
+                         + Quaternion.q_rotate(Quaternion.q_inverse(self.cols(attID)),
                                                np.kron(np.ones([self.length(),1]),translation))
         newRotation = Quaternion.q_mult(np.kron(np.ones([self.length(),1]),rotation),
-                                        self.cols(np.arange(attID,attID+4)))
+                                        self.cols(attID))
         for i in np.arange(0,3):
-            self.setCol(newTranslation[:,i],posID+i)
+            self.setCol(newTranslation[:,i],posID[i])
         for i in np.arange(0,4):
-            self.setCol(newRotation[:,i],attID+i)
+            self.setCol(newRotation[:,i],attID[i])
     
     def applyBodyTransformToTwist(self, velID, rorID, translation, rotation):
         newVel = Quaternion.q_rotate(np.kron(np.ones([self.length(),1]),rotation),
-                                     self.cols(np.arange(velID,velID+3)) \
-                                     + np.cross(self.cols(np.arange(rorID,rorID+3)),np.kron(np.ones([self.length(),1]),translation)))
+                                     self.cols(velID) \
+                                     + np.cross(self.cols(rorID),np.kron(np.ones([self.length(),1]),translation)))
         newRor = Quaternion.q_rotate(np.kron(np.ones([self.length(),1]),rotation),
-                                     self.cols(np.arange(rorID,rorID+3)))
+                                     self.cols(rorID))
         for i in np.arange(0,3):
-            self.setCol(newVel[:,i],velID+i)
-            self.setCol(newRor[:,i],rorID+i)
+            self.setCol(newVel[:,i],velID[i])
+            self.setCol(newRor[:,i],rorID[i])
         
     def applyInertialTransform(self, posID, attID, translation, rotation):
         newTranslation = np.kron(np.ones([self.length(),1]),translation) \
                          + Quaternion.q_rotate(np.kron(np.ones([self.length(),1]),Quaternion.q_inverse(rotation)),
-                                               self.cols(np.arange(posID,posID+3)))
-        newRotation = Quaternion.q_mult(self.cols(np.arange(attID,attID+4)),
+                                               self.cols(posID))
+        newRotation = Quaternion.q_mult(self.cols(attID),
                                         np.kron(np.ones([self.length(),1]),rotation))
         for i in np.arange(0,3):
-            self.setCol(newTranslation[:,i],posID+i)
+            self.setCol(newTranslation[:,i],posID[i])
         for i in np.arange(0,4):
-            self.setCol(newRotation[:,i],attID+i)
+            self.setCol(newRotation[:,i],attID[i])
         
     def invertRotation(self, attID):
-        newRotation = Quaternion.q_inverse(self.cols(np.arange(attID,attID+4)))
+        newRotation = Quaternion.q_inverse(self.cols(attID))
         for i in np.arange(0,4):
-            self.setCol(newRotation[:,i],attID+i)
+            self.setCol(newRotation[:,i],attID[i])
         
     def invertTransform(self, posID, attID):
-        newTranslation = -Quaternion.q_rotate(self.cols(np.arange(attID,attID+4)),self.cols(np.arange(posID,posID+3)))
+        newTranslation = -Quaternion.q_rotate(self.cols(attID),self.cols(posID))
         for i in np.arange(0,3):
-            self.setCol(newTranslation[:,i],posID+i)
+            self.setCol(newTranslation[:,i],posID[i])
         self.invertRotation(attID)
     
     def calibrateBodyTransform(self, velID1, rorID1, other, velID2, rorID2):
@@ -291,8 +291,10 @@ class TimedData:
         td2 = TimedData(7);
         td1.initEmptyFromTimes(np.arange(first,last,timeIncrement))
         td2.initEmptyFromTimes(np.arange(first,last,timeIncrement))
-        self.interpolateColumns(td1, [velID1+0,velID1+1,velID1+2,rorID1+0,rorID1+1,rorID1+2], [1,2,3,4,5,6])
-        other.interpolateColumns(td2, [velID2+0,velID2+1,velID2+2,rorID2+0,rorID2+1,rorID2+2], [1,2,3,4,5,6])
+        self.interpolateColumns(td1, velID1, [1,2,3])
+        self.interpolateColumns(td1, rorID1, [4,5,6])
+        other.interpolateColumns(td2, velID2, [1,2,3])
+        other.interpolateColumns(td2, rorID2, [4,5,6])
         AA = np.zeros([4,4])
         # TODO: Speed up by removing for loop
         for i in np.arange(0,td1.length()):
@@ -326,10 +328,10 @@ class TimedData:
         td2 = TimedData(8);
         td1.initEmptyFromTimes(np.arange(first,last,timeIncrement))
         td2.initEmptyFromTimes(np.arange(first,last,timeIncrement))
-        self.interpolateColumns(td1, [posID1+0,posID1+1,posID1+2], [1,2,3])
-        other.interpolateColumns(td2, [posID2+0,posID2+1,posID2+2], [1,2,3])
-        self.interpolateQuaternion(td1, attID1, 4)
-        other.interpolateQuaternion(td2, attID2, 4)
+        self.interpolateColumns(td1, posID1, [1,2,3])
+        other.interpolateColumns(td2, posID2, [1,2,3])
+        self.interpolateQuaternion(td1, attID1, [4,5,6,7])
+        other.interpolateQuaternion(td2, attID2, [4,5,6,7])
         
         newIDs = np.arange(0,len(calIDs))
         q_CB_vec = np.kron(np.ones([len(calIDs),1]),q_CB)
@@ -384,7 +386,7 @@ class TimedData:
             other_interp = TimedData(8)
             other_interp.initEmptyFromTimes(self.getTime())
             other.interpolateColumns(other_interp, posID2, [1,2,3])
-            other.interpolateQuaternion(other_interp, attID2[0], 4)
+            other.interpolateQuaternion(other_interp, attID2, [4,5,6,7])
             
             it = startIndex
             while it+1<self.last:
