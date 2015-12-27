@@ -24,6 +24,8 @@ if ID == 0: # MH_01_easy with OKVIS
     endcut = 10
     MrMV = np.array([0.0, 0.0, 0.0])
     qVM = np.array([1.0, 0, 0, 0])
+    bodyTransformForBetterPlotRangePos = np.zeros(3)
+    bodyTransformForBetterPlotRangeAtt = Quaternion.q_mult(np.array([(1-0.6*0.6)**(1./2),0,0.6,0]),np.array([0.0,1.0,0.0,0.0]))
     bodyAlignViconToRovio = False
     bodyAlignOkvisToVicon = False
     doRovio = True
@@ -34,7 +36,8 @@ if ID == 0: # MH_01_easy with OKVIS
     plotVel = True
     plotRor = True
     plotYpr = True
-    plotLeuti = True
+    plotFea = False
+    plotLeutiDistances = np.arange(1,21)
 
 if ID == 1: # MH_05_difficult
     rovioOutputBag = '/home/michael/datasets/euroc/MH_05_difficult/rovio/2015-12-22-08-53-51.bag'
@@ -47,6 +50,8 @@ if ID == 1: # MH_05_difficult
     endcut = 10
     MrMV = np.array([0.0, 0.0, 0.0])
     qVM = np.array([1.0, 0, 0, 0])
+    bodyTransformForBetterPlotRangePos = np.zeros(3)
+    bodyTransformForBetterPlotRangeAtt = Quaternion.q_mult(np.array([(1-0.6*0.6)**(1./2),0,0.6,0]),np.array([0.0,1.0,0.0,0.0]))
     bodyAlignViconToRovio = False
     bodyAlignOkvisToVicon = False
     doRovio = True
@@ -57,7 +62,8 @@ if ID == 1: # MH_05_difficult
     plotVel = True
     plotRor = True
     plotYpr = True
-    plotLeuti = True
+    plotFea = False
+    plotLeutiDistances = np.arange(1,21)
 
 if ID == 2: # V1_03_difficult with OKVIS
     rovioOutputBag = '/home/michael/datasets/euroc/V1_03_difficult/rovio/2015-12-21-17-21-32.bag'
@@ -70,6 +76,8 @@ if ID == 2: # V1_03_difficult with OKVIS
     endcut = 0
     MrMV = np.array([0.0, 0.0, 0.0])
     qVM = np.array([1.0, 0, 0, 0])
+    bodyTransformForBetterPlotRangePos = np.zeros(3)
+    bodyTransformForBetterPlotRangeAtt = Quaternion.q_mult(np.array([(1-0.6*0.6)**(1./2),0,0.6,0]),np.array([0.0,1.0,0.0,0.0]))
     MtMV = -3.80322e-02
     bodyAlignViconToRovio = False
     bodyAlignOkvisToVicon = False
@@ -81,7 +89,8 @@ if ID == 2: # V1_03_difficult with OKVIS
     plotVel = True
     plotRor = True
     plotYpr = True
-    plotLeuti = True
+    plotFea = False
+    plotLeutiDistances = np.arange(1,21)
 
 if ID == 3: # FlyingWithBurri/rounds_6
     rovioOutputBag = '/home/michael/datasets/FlyingWithBurri/rounds_6/2015-11-17-14-56-45.bag'
@@ -94,6 +103,8 @@ if ID == 3: # FlyingWithBurri/rounds_6
     endcut = 45
     MrMV = np.array([6.90120e-02, -2.78077e-02, -1.23948e-01]) # TODO: check
     qVM = np.array([1.42930e-03, 8.17427e-01, -1.17036e-02, 5.75911e-01])
+    bodyTransformForBetterPlotRangePos = np.zeros(3)
+    bodyTransformForBetterPlotRangeAtt = Quaternion.q_mult(np.array([(1-0.6*0.6)**(1./2),0,0.6,0]),np.array([0.0,1.0,0.0,0.0]))
     bodyAlignViconToRovio = True
     bodyAlignOkvisToVicon = False
     doRovio = True
@@ -104,10 +115,11 @@ if ID == 3: # FlyingWithBurri/rounds_6
     plotVel = True
     plotRor = True
     plotYpr = True
-    plotLeuti = True
+    plotFea = False
+    plotLeutiDistances = np.arange(1,21)
 
 if ID == 4: # bloesch_leo/planar_1
-    rovioOutputBag = '/home/michael/datasets/bloesch_leo/planar_1/2015-12-22-15-13-09.bag'
+    rovioOutputBag = '/home/michael/datasets/bloesch_leo/planar_1/2015-12-23-17-24-06.bag'
     rovioOutputTopic = '/rovio/odometry'
     okvisOutputFile = ''
     okvisOutputTopic = ''
@@ -117,34 +129,66 @@ if ID == 4: # bloesch_leo/planar_1
     endcut = 0
     MrMV = np.array([6.90120e-02, -2.78077e-02, -1.23948e-01]) # TODO: check
     qVM = np.array([1.42930e-03, 8.17427e-01, -1.17036e-02, 5.75911e-01])
-    bodyAlignViconToRovio = False
-    bodyAlignOkvisToVicon = False
+    bodyTransformForBetterPlotRangePos = np.zeros(3)
+    bodyTransformForBetterPlotRangeAtt = np.array([1.0,0.0,0.0,0.0])
+    bodyAlignViconToRovio = True
+    bodyAlignOkvisToVicon = True
     doRovio = True
     doOkvis = False
     plotRon = False
     plotAtt = False
-    plotPos = False
+    plotPos = True
     plotVel = False
     plotRor = False
-    plotYpr = False
-    plotLeuti = False
+    plotYpr = True
+    plotFea = True
+    plotLeutiDistances = []
+
+if ID == 5: # Long Dataset
+    rovioOutputBag = '/home/michael/datasets/long_trajectory_leutiLynen/rovio/2015-12-23-09-42-47.bag'
+    rovioOutputTopic = '/rovio/odometry'
+    okvisOutputFile = '/home/michael/datasets/long_trajectory_leutiLynen/aslam/aslam_estimator_output_data.csv'
+    okvisOutputTopic = ''
+    viconGroundtruthFile = '/home/michael/datasets/long_trajectory_leutiLynen/long_trajectory.bag'
+    viconGroundtruthTopic = '/vicon/sensor_cross/sensor_cross'
+    startcut = 0
+    endcut = 0
+    MrMV = np.array([0.0, 0.0, 0.0])
+    qVM = np.array([1.0, 0, 0, 0])
+    bodyTransformForBetterPlotRangePos = np.zeros(3)
+    bodyTransformForBetterPlotRangeAtt = np.array([1.0,0.0,0.0,0.0])
+    bodyAlignViconToRovio = True
+    bodyAlignOkvisToVicon = True
+    doRovio = True
+    doOkvis = True
+    plotRon = False
+    plotAtt = False
+    plotPos = True
+    plotVel = True
+    plotRor = True
+    plotYpr = True
+    plotFea = False
+    plotLeutiDistances = [10,40,90,160,250,360]
 
 if True: # Plotter initialization
     if plotRon:
-        plotterRon = Plotter(1, [1,1])
+        plotterRon = Plotter(-1, [1,1],'Norm of Rotational Rate',['time [s]'],['Rotational Rate Norm [rad/s]'],10000)
     if plotAtt:
-        plotterAtt = Plotter(2, [4,1])
+        plotterAtt = Plotter(-1, [4,1],'Attitude Quaternion',['','','','time[s]'],['w[1]','x[1]','y[1]','z[1]'],10000)
     if plotPos:
-        plotterPos = Plotter(3, [3,1])
+        plotterPos = Plotter(-1, [3,1],'Position',['','','time[s]'],['x[m]','y[m]','z[m]'],10000)
     if plotVel:
-        plotterVel = Plotter(4, [3,1])
+        plotterVel = Plotter(-1, [3,1],'Robocentric Velocity',['','','time[s]'],['$v_x$[m/s]','$v_y$[m/s]','$v_z$[m/s]'],10000)
     if plotRor:
-        plotterRor = Plotter(5, [3,1])
+        plotterRor = Plotter(-1, [3,1],'Rotational Rate',['','','time[s]'],['$\omega_x$[rad/s]','$\omega_y$[rad/s]','$\omega_z$[rad/s]'],10000)
     if plotYpr:
-        plotterYpr = Plotter(6, [3,1])
+        plotterYpr = Plotter(-1, [3,1],'Yaw-Pitch-Roll Decomposition',['','','time[s]'],['roll[rad]','pitch[rad]','yaw[rad]'],10000)
+    if plotFea:
+        plotterFea = Plotter(-1, [3,1],'Feature Tracks',['','','time[s]'],['x[m]','y[m]','z[m]'],10000)
 
 if doRovio: # Rovio Timed Data
-    td_rovio = TimedData(58)
+    nFeatures = 25
+    td_rovio = TimedData(58+nFeatures*4)
     rovio_posID = [1,2,3]
     rovio_attID = [4,5,6,7]
     rovio_velID = [8,9,10]
@@ -158,6 +202,10 @@ if doRovio: # Rovio Timed Data
     rovio_yprCovID = np.arange(43,52)
     rovio_yprSpID = [52,53,54]
     rovio_yprSmID = [55,56,57]
+    rovio_fea_posID = []
+    for i in np.arange(nFeatures):
+        rovio_fea_posID.append([58+3*i,59+3*i,60+3*i])
+    rovio_fea_idxID = np.arange(nFeatures)+58+nFeatures*3
 
 if True: # Vicon Timed Data
     td_vicon = TimedData(18)
@@ -179,9 +227,9 @@ if doOkvis: # Okvis Timed Data
 
 if True: # Vicon data acquisition and pre-processing
     if(viconGroundtruthFile.endswith('.csv')):
-        CsvDataAcquisition.csvLoadTransform(viconGroundtruthFile, 0, 1, 4, td_vicon, vicon_posID[0], vicon_attID[0])
+        CsvDataAcquisition.csvLoadTransform(viconGroundtruthFile, 0, 1, 4, td_vicon, vicon_posID, vicon_attID)
     elif(viconGroundtruthFile.endswith('.bag')):
-        RosDataAcquisition.rosBagLoadTransformStamped(viconGroundtruthFile,viconGroundtruthTopic,td_vicon,vicon_posID[0],vicon_attID[0])
+        RosDataAcquisition.rosBagLoadTransformStamped(viconGroundtruthFile,viconGroundtruthTopic,td_vicon,vicon_posID,vicon_attID)
     if(viconGroundtruthFile.endswith('data.csv')):
         td_vicon.d[:,0] = td_vicon.d[:,0]*1e-9
     td_vicon.cropTimes(td_vicon.getFirstTime()+startcut,td_vicon.getLastTime()-endcut)
@@ -191,7 +239,8 @@ if True: # Vicon data acquisition and pre-processing
     td_vicon.computeVelocitiesInBodyFrameFromPostionInWorldFrame(vicon_posID, vicon_velID, vicon_attID)
 
 if doRovio: # Rovio data acquisition and pre-processing
-    RosDataAcquisition.rosBagLoadOdometry(rovioOutputBag, rovioOutputTopic ,td_rovio,rovio_posID[0],rovio_attID[0],rovio_velID[0],rovio_rorID[0],rovio_posCovID[0],rovio_attCovID[0])
+    RosDataAcquisition.rosBagLoadOdometry(rovioOutputBag, rovioOutputTopic ,td_rovio,rovio_posID,rovio_attID,rovio_velID,rovio_rorID,rovio_posCovID,rovio_attCovID)
+    RosDataAcquisition.rosBagLoadRobocentricPointCloud(rovioOutputBag,'/rovio/pcl',td_rovio,rovio_fea_idxID,rovio_fea_posID)
     td_rovio.computeNormOfColumns(rovio_rorID,rovio_ronID)
     td_rovio.applyTimeOffset(td_vicon.getFirstTime()-td_rovio.getFirstTime())
     to = td_rovio.getTimeOffset(rovio_ronID,td_vicon,vicon_ronID)
@@ -199,9 +248,19 @@ if doRovio: # Rovio data acquisition and pre-processing
     td_rovio.cropTimes(td_vicon.getFirstTime(),td_vicon.getLastTime())
 
 if doOkvis: # Okvis data acquisition and pre-processing
-    RosDataAcquisition.rosBagLoadTransformStamped(okvisOutputFile,okvisOutputTopic,td_okvis,okvis_posID[0],okvis_attID[0])
+    if(okvisOutputFile.endswith('.csv')):
+        CsvDataAcquisition.csvLoadTransform(okvisOutputFile, 0, 1, 4, td_okvis, okvis_posID, okvis_attID)
+    elif(okvisOutputFile.endswith('.bag')):
+        RosDataAcquisition.rosBagLoadTransformStamped(okvisOutputFile,okvisOutputTopic,td_okvis,okvis_posID,okvis_attID)
+    if(okvisOutputFile.endswith('data.csv')):
+        td_okvis.d[:,0] = td_okvis.d[:,0]*1e-9
     if(okvisOutputFile.endswith('0.5speed.bag')):
         td_okvis.d[:,0] = 0.5*td_okvis.d[:,0]
+    if(okvisOutputFile == '/home/michael/datasets/long_trajectory_leutiLynen/aslam/aslam_estimator_output_data.csv'):
+        q_real = td_okvis.col(okvis_attID[3])
+        q_im = -td_okvis.cols(okvis_attID[0:3])
+        td_okvis.setCols(q_real,okvis_attID[0])
+        td_okvis.setCols(q_im,okvis_attID[1:4])
     td_okvis.computeRotationalRateFromAttitude(okvis_attID[0],okvis_rorID[0],2,2)
     td_okvis.computeNormOfColumns(okvis_rorID,okvis_ronID)
     td_okvis.applyTimeOffset(td_vicon.getFirstTime()-td_okvis.getFirstTime())
@@ -209,7 +268,7 @@ if doOkvis: # Okvis data acquisition and pre-processing
     td_okvis.applyTimeOffset(-to)
     td_okvis.cropTimes(td_vicon.getFirstTime(),td_vicon.getLastTime())
     td_okvis.computeVelocitiesInBodyFrameFromPostionInWorldFrame(okvis_posID, okvis_velID, okvis_attID)
-
+        
 if plotRon: # Plotting rotational rate norm
     if doRovio:
         plotterRon.addDataToSubplot(td_rovio, rovio_ronID, 1, 'r', 'rovio rotational rate norm')
@@ -218,8 +277,6 @@ if plotRon: # Plotting rotational rate norm
         plotterRon.addDataToSubplot(td_okvis, okvis_ronID, 1, 'g', 'okvis rotational rate norm')
 
 if True: # Transform body coordinate frame for better vizualization, TODO: add to config
-    bodyTransformForBetterPlotRangePos = np.zeros(3)
-    bodyTransformForBetterPlotRangeAtt = Quaternion.q_mult(np.array([(1-0.6*0.6)**(1./2),0,0.6,0]),np.array([0.0,1.0,0.0,0.0]))
     if doRovio:
         td_rovio.applyBodyTransform(rovio_posID[0], rovio_attID[0], bodyTransformForBetterPlotRangePos, bodyTransformForBetterPlotRangeAtt)
         td_rovio.applyBodyTransformToAttCov(rovio_attCovID, bodyTransformForBetterPlotRangeAtt)
@@ -311,20 +368,76 @@ if plotYpr: # Yaw-pitch-roll plotting
         td_okvis.quaternionToYpr(okvis_attID,okvis_yprID)
         plotterYpr.addDataToSubplotMultiple(td_okvis, okvis_yprID, [1,2,3], ['g','g','g'], ['','',''])
 
-if plotLeuti: # Leute Score evaluation
-    distances = np.arange(1,21)
-    spacings = distances
+if plotFea: # Plotting rotational rate norm
     if doRovio:
-        leutiOutputRovio = td_rovio.computeLeutiScore(rovio_posID, rovio_attID, rovio_velID, td_vicon, vicon_posID, vicon_attID, distances, spacings, 0.0)
-        figure(7)
+        figure()
+        x = [[]]
+        y = [[]]
+        for j in np.arange(nFeatures):
+            newFea = td_rovio.cols(rovio_posID) + Quaternion.q_rotate(Quaternion.q_inverse(td_rovio.cols(rovio_attID)),td_rovio.cols(rovio_fea_posID[j]))
+            for i in np.arange(0,3):
+                td_rovio.setCol(newFea[:,i],rovio_fea_posID[j][i])
+            
+            lastStart = 0.0
+            lastID = -1
+            startID = 0
+            for i in np.arange(td_rovio.length()):
+                if(td_rovio.d[i,td_rovio.timeID] > 25.0):
+                    if(td_rovio.d[i,rovio_fea_idxID[j]] < 0.0 or td_rovio.d[i,rovio_fea_idxID[j]] != lastID):
+                        if len(x[-1]) > 0:
+                            x.append([])
+                            y.append([])
+                    if(td_rovio.d[i,rovio_fea_idxID[j]] >= 0.0):
+                        if len(x[-1]) == 0:
+                            lastStart = td_rovio.d[i,td_rovio.timeID]
+                            lastID = td_rovio.d[i,rovio_fea_idxID[j]]
+                            startID = i
+                        x[-1].append(td_rovio.d[i,td_rovio.timeID]-lastStart)
+                        y[-1].append(td_rovio.d[i,rovio_fea_posID[j][2]])
+            
+        for i in np.arange(len(x)):
+            plot(x[i],y[i],'#999999')
+        
+        average = 0
+        averageCount = 0
+        for i in np.arange(len(y)):
+            for j in np.arange(20,len(y[i])):
+                average += y[i][j]
+                averageCount += 1
+        average = average/averageCount
+        
+        means = []
+        stds = []
+        for j in np.arange(200):
+            values = []
+            for i in np.arange(len(y)):
+                if(len(y[i]) > j):
+                    values.append(y[i][j]-average)
+            means.append(mean(values))
+#             stds.append((mean(np.array(values)**(2.0)))**0.5) # TODO
+            stds.append(std(values))
+        plot(np.arange(200)*0.05,np.ones(200)*average,'b', lw=3)
+        plot(np.arange(200)*0.05,average+np.array(means),'r', lw=3)
+        plot(np.arange(200)*0.05,average+np.array(means)+np.array(stds),'r--', lw=3)
+        plot(np.arange(200)*0.05,average+np.array(means)-np.array(stds),'r--', lw=3)
+        
+if len(plotLeutiDistances) > 0: # Leute Score evaluation
+    spacings = plotLeutiDistances
+    if doRovio:
+        leutiOutputRovio = td_rovio.computeLeutiScore(rovio_posID, rovio_attID, rovio_velID, td_vicon, vicon_posID, vicon_attID, plotLeutiDistances, spacings, 0.0)
+        figure()
         ax = axes()
-        boxplot(leutiOutputRovio, positions = distances, widths = 0.6)
-        ax.set_xticklabels(distances)
+        boxplot(leutiOutputRovio, positions = np.arange(len(plotLeutiDistances)), widths = 0.8)
+        ax.set_xticklabels(plotLeutiDistances)
+        ax.set_xlabel('Travelled Distance [m]')
+        ax.set_ylabel('Position Error [m]')
     if doOkvis:
-        leutiOutputOkvis = td_okvis.computeLeutiScore(okvis_posID, okvis_attID, okvis_velID, td_vicon, vicon_posID, vicon_attID, distances, spacings, 0.0)
-        figure(8)
+        leutiOutputOkvis = td_okvis.computeLeutiScore(okvis_posID, okvis_attID, okvis_velID, td_vicon, vicon_posID, vicon_attID, plotLeutiDistances, spacings, 0.0)
+        figure()
         ax = axes()
-        boxplot(leutiOutputOkvis, positions = distances, widths = 0.6)
-        ax.set_xticklabels(distances)
+        boxplot(leutiOutputOkvis, positions = np.arange(len(plotLeutiDistances)), widths = 0.8)
+        ax.set_xticklabels(plotLeutiDistances)
+        ax.set_xlabel('Travelled Distance [m]')
+        ax.set_ylabel('Position Error [m]')
 
 raw_input("Press Enter to continue...")
