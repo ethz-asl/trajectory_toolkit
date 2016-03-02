@@ -152,3 +152,60 @@ def q_toRotMat(q):
     R.T[8,] = 1.0 - 2*q.T[1,]*q.T[1,] - 2*q.T[2,]*q.T[2,]
     
     return R
+
+def q_rotMatToQuat(R):
+    if R.ndim == 1:
+        q = np.zeros([4])
+    else:
+        q = np.zeros([np.shape(R)[0],4])
+    
+    q.T[0,] = np.maximum((1.0 + R.T[0,] + R.T[4,] + R.T[8,])*0.25,0.0)**0.5
+    q.T[1,] = np.sign(R.T[5,] - R.T[7,]) * np.maximum((1.0 + R.T[0,] - R.T[4,] - R.T[8,])*0.25,0.0)**0.5
+    q.T[2,] = np.sign(R.T[6,] - R.T[2,]) * np.maximum((1.0 - R.T[0,] + R.T[4,] - R.T[8,])*0.25,0.0)**0.5
+    q.T[3,] = np.sign(R.T[1,] - R.T[3,]) * np.maximum((1.0 - R.T[0,] - R.T[4,] + R.T[8,])*0.25,0.0)**0.5
+    
+    return q
+
+def q_rotVecToGamma(v):
+    if v.ndim == 1:
+        n = 1
+        G = np.zeros(9)
+    else:
+        n = np.shape(v)[0]
+        G = np.zeros((n,9))
+    
+    angle = Utils.norm(v)
+    f1 = (np.cos(angle)-1.0)/angle**2.0
+    f2 = (angle-np.sin(angle))/angle**3.0
+    S = Utils.skew(v)
+    S2 = Utils.matrixPower(S, 2)
+    
+    G.T[0,] = np.ones(n)
+    G.T[4,] = np.ones(n)
+    G.T[8,] = np.ones(n)
+    G += np.multiply(f1.T, S.T).T
+    G += np.multiply(f2.T, S2.T).T
+    
+    return G
+
+def q_rotVecToRotMat(v):
+    if v.ndim == 1:
+        n = 1
+        G = np.zeros(9)
+    else:
+        n = np.shape(v)[0]
+        G = np.zeros((n,9))
+    
+    angle = Utils.norm(v)
+    f1 = (-np.sin(angle))/angle
+    f2 = (1.0-np.cos(angle))/angle**2.0
+    S = Utils.skew(v)
+    S2 = Utils.matrixPower(S, 2)
+    
+    G.T[0,] = np.ones(n)
+    G.T[4,] = np.ones(n)
+    G.T[8,] = np.ones(n)
+    G += np.multiply(f1.T, S.T).T
+    G += np.multiply(f2.T, S2.T).T
+    
+    return G

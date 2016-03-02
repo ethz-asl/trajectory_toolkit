@@ -2,7 +2,9 @@ import numpy as np
 import csv
 from TimedData import TimedData
 
-def csvLoadTransform(filename, timeCol, posCol, attCol, td, posID, attID):
+def csvLoadTransform(filename, timeCol, posCol, attCol, td, pos, att):
+    posID = td.getColIDs(pos)
+    attID = td.getColIDs(att)
     if( td.last == (-1) ):
         with open(filename, 'rb') as csvfile:
             spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
