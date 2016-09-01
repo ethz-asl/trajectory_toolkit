@@ -1,11 +1,12 @@
 # Imports
 import os, sys, inspect
-from TimedData import TimedData
-from Plotter import Plotter
-import Quaternion
-import Utils
-import RosDataAcquisition
 import numpy as np
+
+from trajectory_toolkit.TimedData import TimedData
+from trajectory_toolkit.Plotter import Plotter
+from trajectory_toolkit import Quaternion
+from trajectory_toolkit import Utils
+from trajectory_toolkit import RosDataAcquisition
 
 td = TimedData()
 td_aligned = TimedData()
