@@ -52,7 +52,7 @@ def addTwistWithCovariance(td, ind, msg, vel = None, ror = None, velCov = None, 
 def addOdometry(td, ind, msg, posID = None, attID = None, velID = None, rorID = None, posCovID = None, attCovID = None, velCovID = None, rorCovID = None):
     addPoseWithCovariance(td,ind,msg,posID,attID,posCovID,attCovID)
     addTwistWithCovariance(td,ind,msg,velID,rorID,velCovID,rorCovID)
-
+    
 def addRobocentricPointCloud(td, ind, msg, rovio_fea_idx, rovio_fea_pos, rovio_fea_cov = None, rovio_fea_dis = None, rovio_fea_disCov = None):
     rovio_fea_idxID = td.getColIDs(rovio_fea_idx)
     rovio_fea_posID = td.getColIDs(rovio_fea_pos)
@@ -135,9 +135,16 @@ class TransformStampedListener:
         self.td.d[self.td.last, self.td.timeID] = msg.header.stamp.to_sec();
         addTransformStamped(self.td, self.td.last, msg, self.posID, self.attID)
             
-def rosBagCountTopic(bag, topic):
+def rosBagCountTopic(bag, topic, t1 = None, t2 = None):
     counter = 0
-    for top, msg, t in bag.read_messages(topics=[topic]):
+    for _, msg, _ in bag.read_messages(topics=[topic]):
+        firstTime = msg.header.stamp.to_sec()
+        break
+    for _, msg, _ in bag.read_messages(topics=[topic]):
+        if t1 and msg.header.stamp.to_sec() < firstTime + t1:
+            continue
+        if t2 and msg.header.stamp.to_sec() > firstTime + t2:
+            break
         counter = counter + 1
     return counter
 
@@ -151,19 +158,43 @@ def rosBagLoadTransformStamped(filename, topic, td, posID, attID):
             td.d[td.last, td.timeID] = msg.header.stamp.to_sec();
             addTransformStamped(td, td.last, msg, posID, attID)
     else:
-        print('Implement functionality when timedata is not empty');
-
-def rosBagLoadOdometry(filename, topic, td, posID = None, attID = None, velID = None, rorID = None, posCovID = None, attCovID = None, velCovID = None, rorCovID = None):
-    bag = rb.Bag(filename)
-    count = rosBagCountTopic(bag,topic)
-    print("loading " + filename + ", found " + str(count) +" "+ topic +" entries")
-    if( td.last == (-1) ):
+        j = 0
         for top, msg, t in bag.read_messages(topics=[topic]):
+            while ((j <= td.last) and (td.d[j,td.timeID] < msg.header.stamp.to_sec())):
+                j += 1
+            if((j <= td.last) and (td.d[j,td.timeID] == msg.header.stamp.to_sec())):
+                addTransformStamped(td, j, msg, posID, attID)
+            elif(j == td.last + 1):
+                td.append()
+                td.d[td.last, td.timeID] = msg.header.stamp.to_sec();
+                addTransformStamped(td, td.last, msg, posID, attID)
+            else:
+                print('Could not merge entry into already existing Timed Data');
+    bag.close()
+
+def rosBagLoadOdometry(filename, topic, td, posID = None, attID = None, velID = None, rorID = None, posCovID = None, attCovID = None, velCovID = None, rorCovID = None, t1 = None, t2 = None, pruneDuplicate = None):
+    bag = rb.Bag(filename)
+    count = rosBagCountTopic(bag,topic,t1,t2)
+    print("loading " + filename + ", found " + str(count) +" "+ topic +" entries")
+    for _, msg, _ in bag.read_messages(topics=[topic]):
+        firstTime = msg.header.stamp.to_sec()
+        break
+    lastMsg = None
+    if( td.last == (-1) ):
+        for _, msg, _ in bag.read_messages(topics=[topic]):
+            if t1 and msg.header.stamp.to_sec() < firstTime + t1:
+                continue
+            if t2 and msg.header.stamp.to_sec() > firstTime + t2:
+                break
+            if (pruneDuplicate and lastMsg and lastMsg.pose == msg.pose):
+                continue
+            lastMsg = msg
             td.append()
             td.d[td.last, td.timeID] = msg.header.stamp.to_sec();
             addOdometry(td, td.last, msg, posID, attID, velID, rorID, posCovID, attCovID, velCovID, rorCovID)
     else:
         print('Implement functionality when timedata is not empty');
+    bag.close()
 
 def rosBagLoadPoseWithCovariance(filename, topic, td, posID = None, attID = None, posCovID = None, attCovID = None):
     bag = rb.Bag(filename)
@@ -181,6 +212,7 @@ def rosBagLoadPoseWithCovariance(filename, topic, td, posID = None, attID = None
             c += 1
     else:
         print('Implement functionality when timedata is not empty');
+    bag.close()
 
 def rosBagLoadTwistWithCovariance(filename, topic, td, velID = None, rorID = None, velCovID = None, rorCovID = None):
     bag = rb.Bag(filename)
@@ -198,6 +230,7 @@ def rosBagLoadTwistWithCovariance(filename, topic, td, velID = None, rorID = Non
             c += 1
     else:
         print('Implement functionality when timedata is not empty');
+    bag.close()
 
 def rosBagLoadImuWithCovariance(filename, topic, td, gyr = None, acc = None, gyrCov = None, accCov = None):
     bag = rb.Bag(filename)
@@ -215,6 +248,7 @@ def rosBagLoadImuWithCovariance(filename, topic, td, gyr = None, acc = None, gyr
             c += 1
     else:
         print('Implement functionality when timedata is not empty');
+    bag.close()
 
 def rosBagLoadRobocentricPointCloud(filename, topic, td, rovio_fea_idx, rovio_fea_pos, rovio_fea_cov = None, rovio_fea_dis = None, rovio_fea_disCov = None):
     bag = rb.Bag(filename)
@@ -234,17 +268,26 @@ def rosBagLoadRobocentricPointCloud(filename, topic, td, rovio_fea_idx, rovio_fe
                 addRobocentricPointCloud(td, j, msg, rovio_fea_idx, rovio_fea_pos, rovio_fea_cov,rovio_fea_dis,rovio_fea_disCov)
             else:
                 print('Could not merge entry into already existing Timed Data');
+    bag.close()
 
-def rosBagLoadTimestampsOnly(filename, topic, td):
+def rosBagLoadTimestampsOnly(filename, topic, td, t1 = None, t2 = None):
     bag = rb.Bag(filename)
-    count = rosBagCountTopic(bag,topic)
+    count = rosBagCountTopic(bag,topic,t1,t2)
     print("loading " + filename + ", found " + str(count) +" "+ topic +" entries")
+    for _, msg, _ in bag.read_messages(topics=[topic]):
+        firstTime = msg.header.stamp.to_sec()
+        break
     if( td.last == (-1) ):
-        for top, msg, t in bag.read_messages(topics=[topic]):
+        for _, msg, _ in bag.read_messages(topics=[topic]):
+            if t1 and msg.header.stamp.to_sec() < firstTime + t1:
+                continue
+            if t2 and msg.header.stamp.to_sec() > firstTime + t2:
+                break
             td.append()
             td.d[td.last, td.timeID] = msg.header.stamp.to_sec();
     else:
         print('Implement functionality when timedata is not empty');
+    bag.close()
     
     
     
