@@ -77,6 +77,13 @@ def findDup(parentFolder, previousFile):
     return None
 
 def runBagWithInfo(rovioExec, bag, info, camera0, camera1, imu_t, cam0_t, cam1_t, r_odom, r_ext, r_bias, r_pcl, path, out, checkForSameOutName = False, checkForSameInfo = False):
+    previous_execution = findDup(path,info)
+    if(checkForSameOutName and os.path.isfile(path + out + '.bag')):
+        print('Found previous execution of bag with same output name')
+        return path + out + '.bag'
+    if(checkForSameInfo and previous_execution != None):
+        print('Found previous execution of bag with same info file')
+        return previous_execution[:-4] + 'bag'
     rospy.set_param('/rovio/camera0_config', camera0)
     rospy.set_param('/rovio/camera1_config', camera1)
     rospy.set_param('/rovio/rosbag_filename', bag)
@@ -89,13 +96,6 @@ def runBagWithInfo(rovioExec, bag, info, camera0, camera1, imu_t, cam0_t, cam1_t
     rospy.set_param('/rovio/record_pcl', r_pcl)
     rospy.set_param('/rovio/filename_out', path + out)
     rospy.set_param('/rovio/filter_config', info)
-    previous_execution = findDup(path,info)
-    if(checkForSameOutName and os.path.isfile(path + out + '.bag')):
-        print('Found previous execution of bag with same output name')
-        return path + out + '.bag'
-    if(checkForSameInfo and previous_execution != None):
-        print('Found previous execution of bag with same info file')
-        return previous_execution[:-4] + 'bag'
     os.system(rovioExec)
     return path + out + '.bag'
 

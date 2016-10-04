@@ -412,6 +412,8 @@ class TimedData:
         self.interpolateQuaternion(td1, attID1, [4,5,6,7])
         other.interpolateQuaternion(td2, attID2, [4,5,6,7])
         
+        if(not calIDs):
+            calIDs = range(td1.length())
         newIDs = np.arange(0,Utils.getLen(calIDs))
         q_CB_vec = np.kron(np.ones([Utils.getLen(calIDs),1]),q_CB)
         q_JC_vec = Quaternion.q_inverse(td2.D()[newIDs,4:8])

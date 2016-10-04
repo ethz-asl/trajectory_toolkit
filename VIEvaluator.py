@@ -200,15 +200,15 @@ class VIEvaluator:
             if(self.extraTransformPos != None or self.extraTransformAtt != None):
                 self.tdgt.applyBodyTransformFull('pos', 'att','vel', 'ror', self.extraTransformPos, self.extraTransformAtt)
     
-    def alignInertialFrame(self):
+    def alignInertialFrame(self, calIDs=[0,1,2,3,4,5,6]):
         if(self.alignMode == 0 or self.alignMode == 2):
-            J_r_JI_est, qIJ_est = self.td.calibrateInertialTransform('pos', 'att', self.tdgt, 'pos','att', np.array([0.0,0.0,0.0]), np.array([1.0,0.0,0.0,0.0]), [0,1,2,3,4,5,6])
+            J_r_JI_est, qIJ_est = self.td.calibrateInertialTransform('pos', 'att', self.tdgt, 'pos','att', np.array([0.0,0.0,0.0]), np.array([1.0,0.0,0.0,0.0]), calIDs)
             print('Align Inertial Transform (estimate to GT):')
             print('Quaternion Rotation qIJ_est:\tw:' + str(qIJ_est[0]) + '\tx:' + str(qIJ_est[1]) + '\ty:' + str(qIJ_est[2]) + '\tz:' + str(qIJ_est[3]))
             print('Translation Vector J_r_JI_est:\tx:' + str(J_r_JI_est[0]) + '\ty:' + str(J_r_JI_est[1]) + '\tz:' + str(J_r_JI_est[2]))
             self.td.applyInertialTransform('pos', 'att',J_r_JI_est,qIJ_est)
         if(self.alignMode == 1 or self.alignMode == 3):
-            J_r_JI_est, qIJ_est = self.tdgt.calibrateInertialTransform('pos', 'att', self.td, 'pos','att', np.array([0.0,0.0,0.0]), np.array([1.0,0.0,0.0,0.0]), [0,1,2,3,4,5,6])
+            J_r_JI_est, qIJ_est = self.tdgt.calibrateInertialTransform('pos', 'att', self.td, 'pos','att', np.array([0.0,0.0,0.0]), np.array([1.0,0.0,0.0,0.0]), calIDs)
             print('Align Inertial Transform (GT to estimate):')
             print('Quaternion Rotation qIJ_est:\tw:' + str(qIJ_est[0]) + '\tx:' + str(qIJ_est[1]) + '\ty:' + str(qIJ_est[2]) + '\tz:' + str(qIJ_est[3]))
             print('Translation Vector J_r_JI_est:\tx:' + str(J_r_JI_est[0]) + '\ty:' + str(J_r_JI_est[1]) + '\tz:' + str(J_r_JI_est[2]))
@@ -356,13 +356,13 @@ class VIEvaluator:
             plt.axis([0, plotFeaTimeEnd, -4.0, -1.0])
             plt.legend(loc=4)
             axis.set_ylabel('Landmark height [m]')
+            plt.title('Convergence of Landmark Distance')
                
             axis = subplot(2,1,2)
-            line_th = plot([0, plotFeaTimeEnd], [sqrt(6.64), sqrt(6.64)],'--',color=Utils.colors['green'], lw=3, label='1% threshold')
+            line_th = plot([0, plotFeaTimeEnd], [sqrt(6.64), sqrt(6.64)],'--',color=Utils.colors['green'], lw=3, label='1\% threshold')
             for i in np.arange(len(x)):
                 plot(x[i],np.abs(np.array(y[i])-average)/np.array(cov[i]),color=Utils.colors['gray'])
             plt.axis([0, plotFeaTimeEnd, 0, 5])
             plt.legend()
-            plt.suptitle('Convergence of Landmark Distance')
             axis.set_ylabel('Normalized error [1]')
             axis.set_xlabel('Time [s]')
