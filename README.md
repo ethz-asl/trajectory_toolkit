@@ -11,6 +11,3 @@ This is a python tool for analyzing and evaluating trajectory data. The basic st
 
 The example.py files shows the basic functionality of the package. A rosbag containing trajectory data is provided for testing.
 
-Future features:
-* Roll/Pitch/Yaw functioanlity for better plotting (including uncertainties)
-* Error plot and error measures
