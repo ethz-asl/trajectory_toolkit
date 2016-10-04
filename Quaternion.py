@@ -1,7 +1,7 @@
 import numpy as np
 import Utils
 
-def q_mult(q1, q2): #TESTED
+def q_mult(q1, q2): #TESTED, JPL
     q = np.zeros_like(q1)
     q.T[0,] = (q1.T[0,]*q2.T[0,] - q1.T[1,]*q2.T[1,] - q1.T[2,]*q2.T[2,] - q1.T[3,]*q2.T[3,])
     q.T[1,] = (q1.T[0,]*q2.T[1,] + q1.T[1,]*q2.T[0,] - q1.T[2,]*q2.T[3,] + q1.T[3,]*q2.T[2,])
