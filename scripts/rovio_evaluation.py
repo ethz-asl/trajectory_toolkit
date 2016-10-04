@@ -1,10 +1,12 @@
 # Imports
 import os, sys, inspect
-from TimedData import TimedData
-from Plotter import Plotter
-from VIEvaluator import VIEvaluator
-import Quaternion
 import numpy as np
+
+from trajectory_toolkit.TimedData import TimedData
+from trajectory_toolkit.Plotter import Plotter
+from trajectory_toolkit import Quaternion
+from trajectory_toolkit import Utils
+from trajectory_toolkit import RosDataAcquisition
 
 plotRon = False
 plotAtt = False
