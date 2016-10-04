@@ -23,7 +23,6 @@ class Plotter:
             figure(self.figureId)
         plt.ion()            
         plt.show(block=False);
-        plt.suptitle(title)
         plt.gcf().subplots_adjust(bottom=0.15)
         self.yLabels = yLabels
         self.xLabels = xLabels
@@ -35,6 +34,8 @@ class Plotter:
             self.xLabels = []
             for i in range(subplotDim[0]*subplotDim[1]):
                 self.xLabels.append('')
+        axis = subplot(self.subplotDim[0], self.subplotDim[1], 1)
+        plt.title(title)
                 
     
     def addDataToSubplot(self, td, colID, plotID, formatstring, legend=''):
